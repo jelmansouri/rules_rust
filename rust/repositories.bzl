@@ -179,6 +179,7 @@ rust_toolchain(
     rustc = "@{workspace_name}//:rustc",
     rustfmt = "@{workspace_name}//:rustfmt_bin",
     rustc_lib = "@{workspace_name}//:rustc_lib",
+    binary_ext = "{binary_ext}",
     staticlib_ext = "{staticlib_ext}",
     dylib_ext = "{dylib_ext}",
     os = "{system}",
@@ -190,6 +191,7 @@ rust_toolchain(
 """.format(
         toolchain_name = name,
         workspace_name = workspace_name,
+        binary_ext = system_to_binary_ext(system),
         staticlib_ext = system_to_staticlib_ext(system),
         dylib_ext = system_to_dylib_ext(system),
         system = system,
