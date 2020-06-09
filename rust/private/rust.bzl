@@ -143,7 +143,7 @@ def _rust_binary_impl(ctx):
     toolchain = find_toolchain(ctx)
     crate_name = ctx.label.name.replace("-", "_")
 
-    output = ctx.actions.declare_file(crate_name + toolchain.binary_ext)
+    output = ctx.actions.declare_file(ctx.label.name + toolchain.binary_ext)
 
     crate_type = getattr(ctx.attr, "crate_type")
 
