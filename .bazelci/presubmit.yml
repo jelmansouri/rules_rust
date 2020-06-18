@@ -44,6 +44,14 @@ tasks:
     - "-@examples//ffi/rust_calling_c:matrix_dylib_test"
     # rust-lld isn't available on RBE
     - "-@examples//hello_world_wasm:hello_world_wasm_test"
+  windows:
+    windows_targets: &windows_targets
+    - "--" # Allows negative patterns; hack for https://github.com/bazelbuild/continuous-integration/pull/245
+    - "..."
+    - "@docs//..."
+    - "@examples//..."
+    build_targets: *windows_targets
+    test_targets: *windows_targets
   examples:
     name: Examples
     platform: ubuntu1804

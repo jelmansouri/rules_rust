@@ -53,6 +53,15 @@ def rust_repositories(version = "1.39.0", iso_date = None, rustfmt_version = "1.
         rustfmt_version = rustfmt_version,
     )
 
+    rust_repository_set(
+        name = "rust_windows_x86_64",
+        exec_triple = "x86_64-pc-windows-msvc",
+        extra_target_triples = ["wasm32-unknown-unknown"],
+        version = version,
+        iso_date = iso_date,
+        rustfmt_version = rustfmt_version,
+    )
+
 def _check_version_valid(version, iso_date, param_prefix = ""):
     """Verifies that the provided rust version and iso_date make sense."""
 
