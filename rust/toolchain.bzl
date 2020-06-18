@@ -16,6 +16,7 @@ def _rust_toolchain_impl(ctx):
         rustc = ctx.file.rustc,
         rust_doc = ctx.file.rust_doc,
         rustfmt = ctx.file.rustfmt,
+        clippy_driver = ctx.file.clippy_driver,
         rustc_lib = ctx.attr.rustc_lib,
         rust_lib = ctx.attr.rust_lib,
         binary_ext = ctx.attr.binary_ext,
@@ -44,6 +45,10 @@ rust_toolchain = rule(
         ),
         "rustfmt": attr.label(
             doc = "The location of the `rustfmt` binary. Can be a direct source or a filegroup containing one item.",
+            allow_single_file = True,
+        ),
+        "clippy_driver": attr.label(
+            doc = "The location of the `clippy-driver` binary. Can be a direct source or a filegroup containing one item.",
             allow_single_file = True,
         ),
         "rustc_lib": attr.label(
