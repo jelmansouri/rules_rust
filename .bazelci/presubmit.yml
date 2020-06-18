@@ -47,9 +47,7 @@ tasks:
   windows:
     windows_targets: &windows_targets
     - "--" # Allows negative patterns; hack for https://github.com/bazelbuild/continuous-integration/pull/245
-    - "..."
-    - "@docs//..."
-    - "@examples//..."
+    - "@examples//hello_world"
     build_targets: *windows_targets
     test_targets: *windows_targets
   examples:
