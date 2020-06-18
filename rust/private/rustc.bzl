@@ -424,6 +424,56 @@ def construct_compile_command(
         maybe_rename,
     )
 
+def construct_and_run_rustc_command(
+        ctx,
+        toolchain,
+        crate_info,
+        compile_inputs,
+        args,
+        env,
+        build_info,
+        out_dir):
+    if hasattr(ctx.attr, "version") and ctx.attr.version != "0.0.0":
+        formatted_version = " v{}".format(ctx.attr.version)
+    else:
+        formatted_version = ""
+    
+    progress_message = "Compiling Rust {} {}{} ({} files)".format(
+        crate_info.type,
+        ctx.label.name,
+        formatted_version,
+        len(crate_info.srcs),
+    )
+
+    if toolchain.exec_triple.find("windows") != -1:
+        ctx.actions.run(
+            executable = toolchain.rustc,
+            inputs = compile_inputs,
+            outputs = [crate_info.output],
+            env = env,
+            arguments = [args],
+            mnemonic = "Rustc",
+            progress_message = progress_message,
+        )
+    else:
+        command = construct_compile_command(
+            ctx,
+            toolchain.rustc.path,
+            toolchain,
+            crate_info,
+            build_info,
+            out_dir,
+        )
+        ctx.actions.run_shell(
+            command = command,
+            inputs = compile_inputs,
+            outputs = [crate_info.output],
+            env = env,
+            arguments = [args],
+            mnemonic = "Rustc",
+            progress_message = progress_message,
+        )
+
 def rustc_compile_action(
         ctx,
         toolchain,
@@ -467,34 +517,17 @@ def rustc_compile_action(
         rust_flags
     )
 
-    command = construct_compile_command(
+    construct_and_run_rustc_command(
         ctx,
-        toolchain.rustc.path,
         toolchain,
         crate_info,
+        compile_inputs,
+        args,
+        env,
         build_info,
-        out_dir,
+        out_dir
     )
 
-    if hasattr(ctx.attr, "version") and ctx.attr.version != "0.0.0":
-        formatted_version = " v{}".format(ctx.attr.version)
-    else:
-        formatted_version = ""
-
-    ctx.actions.run_shell(
-        command = command,
-        inputs = compile_inputs,
-        outputs = [crate_info.output],
-        env = env,
-        arguments = [args],
-        mnemonic = "Rustc",
-        progress_message = "Compiling Rust {} {}{} ({} files)".format(
-            crate_info.type,
-            ctx.label.name,
-            formatted_version,
-            len(crate_info.srcs),
-        ),
-    )
     runfiles = ctx.runfiles(
         files = dep_info.transitive_dylibs.to_list() + getattr(ctx.files, "data", []),
         collect_data = True,
