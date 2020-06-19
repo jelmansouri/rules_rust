@@ -1,4 +1,4 @@
-load("@io_bazel_rules_rust//rust:private/rustc.bzl", "BuildInfo", "DepInfo", "get_compilation_mode_opts")
+load("@io_bazel_rules_rust//rust:private/rustc.bzl", "BuildInfo", "DepInfo", "get_compilation_mode_opts", "get_linker_and_args")
 load("@io_bazel_rules_rust//rust:private/utils.bzl", "find_toolchain")
 load("@io_bazel_rules_rust//rust:rust.bzl", "rust_binary")
 load("@bazel_tools//tools/cpp:toolchain_utils.bzl", "find_cpp_toolchain")
@@ -9,6 +9,7 @@ def _cargo_build_script_run(ctx, script):
     env_out = ctx.actions.declare_file(ctx.label.name + ".env")
     dep_env_out = ctx.actions.declare_file(ctx.label.name + ".depenv")
     flags_out = ctx.actions.declare_file(ctx.label.name + ".flags")
+    link_flags = ctx.actions.declare_file(ctx.label.name + ".linkflags")
     manifest_dir = "%s.runfiles/%s" % (script.path, ctx.label.workspace_name or ctx.workspace_name)
     compilation_mode_opt_level = get_compilation_mode_opts(ctx, toolchain).opt_level
 
@@ -20,21 +21,34 @@ def _cargo_build_script_run(ctx, script):
             crate_name = crate_name.replace("_build_script", "")
         crate_name = crate_name.replace("_", "-")
 
+    toolchain_tools = [
+        # Needed for rustc to function.
+        toolchain.rustc_lib.files,
+        toolchain.rust_lib.files,
+    ]
+
+    cc_toolchain = find_cpp_toolchain(ctx)
+
     env = {
         "CARGO_CFG_TARGET_ARCH": toolchain.target_arch,
         "CARGO_MANIFEST_DIR": manifest_dir,
         "HOST": toolchain.exec_triple,
         "OPT_LEVEL": compilation_mode_opt_level,
-        "OUT_DIR": out_dir.path,
         "RUSTC": toolchain.rustc.path,
         "RUST_BACKTRACE": "full",
         "TARGET": toolchain.target_triple,
+        # OUT_DIR is set by the runner itself, rather than on the action.
     }
 
-    cc_toolchain = find_cpp_toolchain(ctx)
+    # Pull in env vars which may be required for the cc_toolchain to work (e.g. on OSX, the SDK version).
+    # We hope that the linker env is sufficient for the whole cc_toolchain.
+    _, _, linker_env = get_linker_and_args(ctx, None)
+    env.update(**linker_env)
+
     cc_executable = cc_toolchain and cc_toolchain.compiler_executable
     if cc_executable:
         env["CC"] = cc_executable
+        toolchain_tools.append(cc_toolchain.all_files)
 
     for f in ctx.attr.crate_features:
         env["CARGO_FEATURE_" + f.upper().replace("-", "_")] = "1"
@@ -45,11 +59,7 @@ def _cargo_build_script_run(ctx, script):
             ctx.executable._cargo_build_script_runner,
             toolchain.rustc,
         ],
-        transitive = [
-            # Needed for rustc to function.
-            toolchain.rustc_lib.files,
-            toolchain.rust_lib.files,
-        ],
+        transitive = toolchain_tools,
     )
 
     # dep_env_file contains additional environment variables coming from
@@ -68,8 +78,8 @@ def _cargo_build_script_run(ctx, script):
 
     ctx.actions.run_shell(
         command = cmd,
-        arguments = [ctx.executable._cargo_build_script_runner.path, script.path, crate_name, env_out.path, flags_out.path, dep_env_out.path],
-        outputs = [out_dir, env_out, flags_out, dep_env_out],
+        arguments = [ctx.executable._cargo_build_script_runner.path, script.path, crate_name, out_dir.path, env_out.path, flags_out.path, link_flags.path, dep_env_out.path],
+        outputs = [out_dir, env_out, flags_out, link_flags, dep_env_out],
         tools = tools,
         inputs = dep_env_files,
         mnemonic = "CargoBuildScriptRun",
@@ -82,6 +92,7 @@ def _cargo_build_script_run(ctx, script):
             rustc_env = env_out,
             dep_env = dep_env_out,
             flags = flags_out,
+            link_flags = link_flags,
         ),
     ]
 
@@ -109,6 +120,7 @@ _build_script_run = rule(
         ),
         "deps": attr.label_list(),
     },
+    fragments = ["cpp"],
     toolchains = [
         "@io_bazel_rules_rust//rust:toolchain",
         "@bazel_tools//tools/cpp:toolchain_type",
