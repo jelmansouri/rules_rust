@@ -422,11 +422,14 @@ def construct_and_run_rustc_command(
         ctx,
         toolchain,
         crate_info,
+        build_info,
+        dep_info,
+        prep_commands,
+        dynamic_env,
+        dynamic_build_flags,
         compile_inputs,
         args,
-        env,
-        build_info,
-        out_dir):
+        env):
     if hasattr(ctx.attr, "version") and ctx.attr.version != "0.0.0":
         formatted_version = " v{}".format(ctx.attr.version)
     else:
@@ -456,7 +459,10 @@ def construct_and_run_rustc_command(
             toolchain,
             crate_info,
             build_info,
-            out_dir,
+            dep_info,
+            prep_commands,
+            dynamic_env,
+            dynamic_build_flags,
         )
         ctx.actions.run_shell(
             command = command,
@@ -516,14 +522,14 @@ def rustc_compile_action(
         ctx,
         toolchain,
         crate_info,
-        compile_inputs,
-        args,
-        env,
         build_info,
         dep_info,
         prep_commands,
         dynamic_env,
         dynamic_build_flags,
+        compile_inputs,
+        args,
+        env,
     )
 
     runfiles = ctx.runfiles(
