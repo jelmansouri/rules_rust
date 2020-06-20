@@ -122,23 +122,22 @@ def collect_deps(label, deps, proc_macro_deps, aliases, toolchain):
     for dep in deps:
         if CrateInfo in dep:
             if dep[CrateInfo].type == "proc-macro":
-              fail(
-                  "{} listed {} in its deps, but it is a proc-macro. It should instead be in proc-macro-deps.".format(
-                      label,
-                      dep.label,
-                  )
-              )
+                fail(
+                    "{} listed {} in its deps, but it is a proc-macro. It should instead be in proc-macro-deps.".format(
+                        label,
+                        dep.label,
+                    ),
+                )
     for dep in proc_macro_deps:
         type = dep[CrateInfo].type
         if type != "proc-macro":
-          fail(
-              "{} listed {} in its proc_macro_deps, but it is not proc-macro, it is a {}. It should probably instead be listed in deps.".format(
-                  label,
-                  dep.label,
-                  type,
-              )
-          )
-
+            fail(
+                "{} listed {} in its proc_macro_deps, but it is not proc-macro, it is a {}. It should probably instead be listed in deps.".format(
+                    label,
+                    dep.label,
+                    type,
+                ),
+            )
 
     # TODO: Fix depset union (https://docs.bazel.build/versions/master/skylark/depsets.html)
     direct_crates = []
@@ -148,7 +147,7 @@ def collect_deps(label, deps, proc_macro_deps, aliases, toolchain):
     transitive_build_infos = depset()
     build_info = None
 
-    aliases = {k.label: v for k,v in aliases.items()}
+    aliases = {k.label: v for k, v in aliases.items()}
     for dep in deps + proc_macro_deps:
         if CrateInfo in dep:
             # This dependency is a rust_library
@@ -327,6 +326,7 @@ def construct_arguments(
 
     # Gets the paths to the folders containing the standard library (or libcore)
     rust_lib_paths = depset([file.dirname for file in toolchain.rust_lib.files.to_list()]).to_list()
+
     # Tell Rustc where to find the standard library
     args.add_all(rust_lib_paths, before_each = "-L", format_each = "%s")
 
@@ -406,7 +406,7 @@ def construct_compile_command(
         src = "/".join([crate_info.output.dirname, generated_file])
         dst = crate_info.output.path
         if src != dst:
-            maybe_rename = " && /bin/mv {src} {dst}".format(src=src, dst=dst)
+            maybe_rename = " && /bin/mv {src} {dst}".format(src = src, dst = dst)
 
     # Set ${EXEC_ROOT} so that actions which chdir still work.
     # See https://github.com/google/cargo-raze/issues/71#issuecomment-433225853 for the rationale as
@@ -434,23 +434,34 @@ def construct_and_run_rustc_command(
         formatted_version = " v{}".format(ctx.attr.version)
     else:
         formatted_version = ""
-    
-    progress_message = "Compiling Rust {} {}{} ({} files)".format(
-        crate_info.type,
-        ctx.label.name,
-        formatted_version,
-        len(crate_info.srcs),
-    )
 
     if toolchain.exec_triple.find("windows") != -1:
+        #rustc_wrapper(
+        #    rustc = toolchain.rustc.path,
+        #    inputs = compile_inputs,
+        #    output = crate_info.output,
+        #    env = env,
+        #    arguments = [args],
+        #    progress_message = "Compiling Rust {} {}{} ({} files)".format(
+        #        crate_info.type,
+        #        ctx.label.name,
+        #        formatted_version,
+        #        len(crate_info.srcs),
+        #    ),
+        #)
         ctx.actions.run(
-            executable = toolchain.rustc,
+            executable = ctx.executable._rustc_wrapper,
             inputs = compile_inputs,
             outputs = [crate_info.output],
             env = env,
             arguments = [args],
             mnemonic = "Rustc",
-            progress_message = progress_message,
+            progress_message = "Compiling Rust {} {}{} ({} files)".format(
+                crate_info.type,
+                ctx.label.name,
+                formatted_version,
+                len(crate_info.srcs),
+            ),
         )
     else:
         command = construct_compile_command(
@@ -471,7 +482,12 @@ def construct_and_run_rustc_command(
             env = env,
             arguments = [args],
             mnemonic = "Rustc",
-            progress_message = progress_message,
+            progress_message = "Compiling Rust {} {}{} ({} files)".format(
+                crate_info.type,
+                ctx.label.name,
+                formatted_version,
+                len(crate_info.srcs),
+            ),
         )
 
 def rustc_compile_action(
@@ -563,6 +579,7 @@ def _create_out_dir_action(ctx, file, build_info, dep_info):
 
     prep_commands = []
     input_files = []
+
     # Env vars and build flags which need to be set in the action's command line, rather than on the action's env,
     # because they rely on other env vars or commands.
     dynamic_env = {}
@@ -571,20 +588,21 @@ def _create_out_dir_action(ctx, file, build_info, dep_info):
     # TODO: Remove system tar usage
     if build_info:
         prep_commands.append("export $(cat %s)" % build_info.rustc_env.path)
+
         # out_dir will be added as input by the transitive_build_infos loop below.
         dynamic_env["OUT_DIR"] = "${{EXEC_ROOT}}/{}".format(build_info.out_dir.path)
         dynamic_build_flags.append("$(cat '%s')" % build_info.flags.path)
     elif tar_file_attr:
         out_dir = ".out-dir"
         prep_commands.append("mkdir -p $OUT_DIR")
-        prep_commands.append("tar -xzf {tar} -C $OUT_DIR".format(tar=tar_file_attr.path))
+        prep_commands.append("tar -xzf {tar} -C $OUT_DIR".format(tar = tar_file_attr.path))
         input_files.append(tar_file_attr)
         dynamic_env["OUT_DIR"] = "${{EXEC_ROOT}}/{}".format(out_dir)
 
     # This should probably only actually be exposed to actions which link.
     for dep_build_info in dep_info.transitive_build_infos.to_list():
         input_files.append(dep_build_info.out_dir)
-        dynamic_build_flags.append("$(cat '{}' | sed -e \"s#\${{EXEC_ROOT}}#${{EXEC_ROOT}}#g\")".format(dep_build_info.link_flags.path))
+        dynamic_build_flags.append("$(cat '{}' | sed -e \"s#\\${{EXEC_ROOT}}#${{EXEC_ROOT}}#g\")".format(dep_build_info.link_flags.path))
         input_files.append(dep_build_info.link_flags)
 
     return input_files, prep_commands, dynamic_env, dynamic_build_flags
