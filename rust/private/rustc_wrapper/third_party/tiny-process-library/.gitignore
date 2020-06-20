@@ -44,6 +44,6 @@ multithread_test
 io_test
 
 # Commonly used build directory
-build
+# build
 
 io_test_stdout.txt
