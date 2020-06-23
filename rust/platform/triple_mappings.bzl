@@ -43,7 +43,7 @@ _SYSTEM_TO_BINARY_EXT = {
     "darwin": "",
     "windows": ".exe",
     "emscripten": ".js",
-    "unknown": "",
+    "unknown": ".wasm",
 }
 
 _SYSTEM_TO_STATICLIB_EXT = {

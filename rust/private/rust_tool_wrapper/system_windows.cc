@@ -6,6 +6,8 @@
 
 #include <windows.h>
 
+#include "third_party/microtar/src/microtar.h"
+
 namespace rust_tool_wrapper {
 
 namespace {
@@ -72,8 +74,7 @@ System::StrType System::GetWorkingDirectory() {
   return System::StrType{buffer};
 }
 
-System::StrType System::JoinWithWorkingDirectory(
-    const StrType& relative_path) {
+System::StrType System::JoinWithWorkingDirectory(const StrType& relative_path) {
   return GetWorkingDirectory() + RTW_SYS_STR_LITERAL("\\") + relative_path;
 }
 
@@ -118,5 +119,8 @@ int System::Exec(const System::StrType& executable,
   CloseHandle(process_info.hProcess);
   return exit_status;
 }
+
+void System::UnTar(const System::StrType& tar_file,
+                  const System::StrType& out_dir) {}
 
 }  // namespace rust_tool_wrapper
