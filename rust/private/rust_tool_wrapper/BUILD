@@ -33,20 +33,32 @@ config_setting(
     ],
 )
 
-cc_library(
-    name = "tiny-process-library",
+POSIX_SRCS = [
+    "system_posix.cc",
+]
+
+cc_binary(
+    name = "rust_tool_wrapper",
     srcs = [
-        "process.hpp",
-        "process.cpp"
+        "rust_tool_wrapper.cc",
+        "system.h",
     ] + select({
-        ":windows": ["process_win.cpp"],
-        ":linux": ["process_unix.cpp"],
-        ":macos": ["process_unix.cpp"],
-        ":freebsd": ["process_unix.cpp"],
-        ":openbsd": ["process_unix.cpp"],
+        ":windows": [
+            "system_windows.cc",
+        ],
+        ":linux": POSIX_SRCS,
+        ":macos": POSIX_SRCS,
+        ":freebsd": POSIX_SRCS,
+        ":openbsd": POSIX_SRCS,
     }),
-    hdrs = [
-        "process.hpp",
-    ],
+    defines = [] + select({
+        ":windows": [
+            "UNICODE",
+            "_UNICODE",
+        ],
+    }),
     visibility = ["//visibility:public"],
+    deps = [
+        "@io_bazel_rules_rust//third_party/microtar",
+    ],
 )
