@@ -14,44 +14,40 @@ namespace {
 
 void ArgumentQuote(const System::StrType& argument,
                    System::StrType& command_line) {
-  if (argument.empty() == false &&
-      argument.find_first_of(RUSTC_WRAPPER_SYS_STR_LITERAL(" \t\n\v\"")) ==
-          argument.npos) {
+  if (argument.empty() == false && argument.find_first_of(RTW_SYS_STR_LITERAL(
+                                       " \t\n\v\"")) == argument.npos) {
     command_line.append(argument);
   } else {
-    command_line.push_back(RUSTC_WRAPPER_SYS_STR_LITERAL('"'));
+    command_line.push_back(RTW_SYS_STR_LITERAL('"'));
 
     for (auto it = argument.begin();; ++it) {
       unsigned number_backslashes = 0;
 
-      while (it != argument.end() &&
-             *it == RUSTC_WRAPPER_SYS_STR_LITERAL('\\')) {
+      while (it != argument.end() && *it == RTW_SYS_STR_LITERAL('\\')) {
         ++it;
         ++number_backslashes;
       }
 
       if (it == argument.end()) {
-        command_line.append(number_backslashes * 2,
-                            RUSTC_WRAPPER_SYS_STR_LITERAL('\\'));
+        command_line.append(number_backslashes * 2, RTW_SYS_STR_LITERAL('\\'));
         break;
       } else if (*it == L'"') {
         command_line.append(number_backslashes * 2 + 1,
-                            RUSTC_WRAPPER_SYS_STR_LITERAL('\\'));
+                            RTW_SYS_STR_LITERAL('\\'));
         command_line.push_back(*it);
       } else {
-        command_line.append(number_backslashes,
-                            RUSTC_WRAPPER_SYS_STR_LITERAL('\\'));
+        command_line.append(number_backslashes, RTW_SYS_STR_LITERAL('\\'));
         command_line.push_back(*it);
       }
     }
-    command_line.push_back(RUSTC_WRAPPER_SYS_STR_LITERAL('"'));
+    command_line.push_back(RTW_SYS_STR_LITERAL('"'));
   }
 }
 
 void MakeCommandLine(const System::Arguments& arguments,
                      System::StrType& command_line) {
   for (const System::StrType& argument : arguments) {
-    command_line.push_back(RUSTC_WRAPPER_SYS_STR_LITERAL(' '));
+    command_line.push_back(RTW_SYS_STR_LITERAL(' '));
     ArgumentQuote(argument, command_line);
   }
 }
@@ -60,9 +56,9 @@ void MakeEnvironmentBlock(const System::EnvironmentBlock& environment_block,
                           System::StrType& environment_block_win) {
   for (const System::StrType& ev : environment_block) {
     environment_block_win += ev;
-    environment_block_win.push_back(RUSTC_WRAPPER_SYS_STR_LITERAL('\0'));
+    environment_block_win.push_back(RTW_SYS_STR_LITERAL('\0'));
   }
-  environment_block_win.push_back(RUSTC_WRAPPER_SYS_STR_LITERAL('\0'));
+  environment_block_win.push_back(RTW_SYS_STR_LITERAL('\0'));
 }
 
 }  // namespace
@@ -76,9 +72,9 @@ System::StrType System::GetWorkingDirectory() {
   return System::StrType{buffer};
 }
 
-System::StrType System::GetJoinWithWorkingDirectory(
+System::StrType System::JoinWithWorkingDirectory(
     const StrType& relative_path) {
-  return System::StrType{};
+  return GetWorkingDirectory() + RTW_SYS_STR_LITERAL("\\") + relative_path;
 }
 
 int System::Exec(const System::StrType& executable,

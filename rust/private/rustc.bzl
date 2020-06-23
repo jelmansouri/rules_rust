@@ -353,6 +353,9 @@ def construct_arguments(
         dst = crate_info.output.path
         if src != dst:
             args.add_all(["--rename", src, dst])
+    
+    if maker_path != None:
+        args.add("--maker-path", maker_path)
 
     # Rustc arguments
     args.add("--")
