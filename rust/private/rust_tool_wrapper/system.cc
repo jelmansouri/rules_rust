@@ -1,5 +1,8 @@
 #include "rust/private/rust_tool_wrapper/system.h"
 
+#include <codecvt>
+#include <locale>
+
 namespace rust_tool_wrapper {
 
 System::StrType System::ToStrType(const std::string& string) {

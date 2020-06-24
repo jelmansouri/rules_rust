@@ -1,10 +1,8 @@
 #ifndef RUST_PRIVATE_RUSTC_WRAPPER_SYSTEM_H_
 #define RUST_PRIVATE_RUSTC_WRAPPER_SYSTEM_H_
 
-#include <codecvt>
-#include <locale>
 #include <string>
-#include <unordered_map>
+#include <vector>
 
 #if defined(_WIN32) && defined(UNICODE)
 #define RTW_WIN_UNICODE
@@ -38,11 +36,10 @@ class System {
   static StrType GetWorkingDirectory();
   static StrType Join(const StrType& path1, const StrType& path2);
 
-  static int Exec(const System::StrType& executable, const Arguments& arguments,
+  static int Exec(const StrType& executable, const Arguments& arguments,
                   const EnvironmentBlock& environment_block);
 
-  static int UnTar(const System::StrType& tar_file,
-                   const System::StrType& out_dir);
+  static int UnTar(const StrType& tar_file, const StrType& out_dir);
 };
 
 }  // namespace rust_tool_wrapper
