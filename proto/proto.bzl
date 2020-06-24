@@ -284,7 +284,7 @@ rust_grpc_library = rule(
             executable = True,
             cfg = "host",
             default = Label(
-                "@io_bazel_rules_rust//proto/optional_output_wrapper:optional_output_wrapper,
+                "@io_bazel_rules_rust//proto/optional_output_wrapper:optional_output_wrapper",
             ),
         ),
     },
