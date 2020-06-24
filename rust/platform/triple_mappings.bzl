@@ -39,19 +39,19 @@ _SYSTEM_TO_BUILTIN_SYS_SUFFIX = {
 _SYSTEM_TO_BINARY_EXT = {
     "freebsd": "",
     "linux": "",
-    # TODO(acmcarther): To be verified
-    "darwin": "",
     "windows": ".exe",
+    "darwin": "",
+    # TODO(acmcarther): To be verified
     "emscripten": ".js",
-    "unknown": "",
+    "unknown": ".wasm",
 }
 
 _SYSTEM_TO_STATICLIB_EXT = {
     "freebsd": ".a",
     "linux": ".a",
     "darwin": ".a",
-    # TODO(acmcarther): To be verified
     "windows": ".lib",
+    # TODO(acmcarther): To be verified
     "emscripten": ".js",
     "unknown": "",
 }
@@ -60,8 +60,8 @@ _SYSTEM_TO_DYLIB_EXT = {
     "freebsd": ".so",
     "linux": ".so",
     "darwin": ".dylib",
-    # TODO(acmcarther): To be verified
     "windows": ".dll",
+    # TODO(acmcarther): To be verified
     "emscripten": ".js",
     "unknown": ".wasm",
 }
