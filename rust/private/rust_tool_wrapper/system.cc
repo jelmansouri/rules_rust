@@ -1,7 +1,9 @@
 #include "rust/private/rust_tool_wrapper/system.h"
 
+#if defined(RTW_WIN_UNICODE)
 #include <codecvt>
 #include <locale>
+#endif  // defined(RTW_WIN_UNICODE)
 
 namespace rust_tool_wrapper {
 
