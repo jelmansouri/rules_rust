@@ -1,15 +1,15 @@
 #include "rust/private/rust_tool_wrapper/system.h"
 
-#include <iostream>
-#include <thread>
-#include <vector>
-
+// posix headers
 #include <fcntl.h>
 #include <poll.h>
 #include <signal.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+
+#include <iostream>
+#include <vector>
 
 namespace rust_tool_wrapper {
 
@@ -22,8 +22,8 @@ System::StrType System::GetWorkingDirectory() {
   return System::StrType{cwd};
 }
 
-System::StrType System::JoinWithWorkingDirectory(const StrType &relative_path) {
-  return GetWorkingDirectory() + "/" + relative_path;
+System::StrType System::Join(const StrType &path1, const StrType &path2) {
+  return path1 + "/" + path2;
 }
 
 int System::Exec(const System::StrType &executable,
@@ -34,7 +34,7 @@ int System::Exec(const System::StrType &executable,
     return -1;
   } else if (child_pid == 0) {
     std::vector<char *> argv;
-    std::string argv0 = JoinWithWorkingDirectory(executable);
+    std::string argv0 = Join(GetWorkingDirectory(), executable);
     argv.push_back(&argv0[0]);
     for (const StrType &argument : arguments) {
       argv.push_back(const_cast<char *>(argument.c_str()));
@@ -48,7 +48,7 @@ int System::Exec(const System::StrType &executable,
     envp.push_back(nullptr);
 
     umask(022);
-    
+
     execve(executable.c_str(), argv.data(), envp.data());
 
     return -1;

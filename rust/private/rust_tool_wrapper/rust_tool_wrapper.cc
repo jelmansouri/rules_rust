@@ -28,12 +28,13 @@ int main(int argc, const char* argv[], const char* envp[]) {
   System::StrType maker_path;
   System::Arguments arguments;
   System::EnvironmentBlock environment_block;
+
   for (int i = 1; i < argc; ++i) {
     System::StrType arg = argv[i];
     if (arg == RTW_SYS_STR_LITERAL("--tool-path")) {
       tool_path = argv[++i];
     } else if (arg == RTW_SYS_STR_LITERAL("--out-dir")) {
-      out_dir = System::JoinWithWorkingDirectory(argv[++i]);
+      out_dir = System::Join(System::GetWorkingDirectory(), argv[++i]);
       environment_block.push_back(System::ComposeEnvironmentVariable(
           RTW_SYS_STR_LITERAL("OUT_DIR"), out_dir));
     } else if (arg == RTW_SYS_STR_LITERAL("--tar-file")) {
@@ -59,7 +60,7 @@ int main(int argc, const char* argv[], const char* envp[]) {
     } else if (arg == RTW_SYS_STR_LITERAL("--package-dir")) {
       System::ComposeEnvironmentVariable(
           RTW_SYS_STR_LITERAL("CARGO_MANIFEST_DIR"),
-          System::JoinWithWorkingDirectory(argv[++i]));
+          System::Join(System::GetWorkingDirectory(), argv[++i]));
     } else if (arg == RTW_SYS_STR_LITERAL("--maker-path")) {
       maker_path = argv[++i];
     } else if (arg == RTW_SYS_STR_LITERAL("--rename")) {
@@ -72,6 +73,7 @@ int main(int argc, const char* argv[], const char* envp[]) {
     }
   }
 
+  // TODO: Remove out_dir_tar support
   if (!tar_file.empty()) {
     int exit_code = System::UnTar(tar_file, out_dir);
     if (exit_code != 0) {
@@ -88,6 +90,7 @@ int main(int argc, const char* argv[], const char* envp[]) {
     if (!maker_path.empty()) {
       std::ofstream file(maker_path);
     }
+    
     // we perform a rename if necessary
     if (!rename_from.empty() && !rename_to.empty()) {
       std::ifstream source(rename_from, std::ios::binary);

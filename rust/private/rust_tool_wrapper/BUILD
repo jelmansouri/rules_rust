@@ -42,6 +42,7 @@ cc_binary(
     srcs = [
         "rust_tool_wrapper.cc",
         "system.h",
+        "system.cc",
     ] + select({
         ":windows": [
             "system_windows.cc",

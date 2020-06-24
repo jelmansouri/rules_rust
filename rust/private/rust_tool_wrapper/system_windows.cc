@@ -6,6 +6,8 @@
 
 #include <windows.h>
 
+#include <iostream>
+
 namespace rust_tool_wrapper {
 
 namespace {
@@ -72,8 +74,8 @@ System::StrType System::GetWorkingDirectory() {
   return System::StrType{buffer};
 }
 
-System::StrType System::JoinWithWorkingDirectory(const StrType& relative_path) {
-  return GetWorkingDirectory() + RTW_SYS_STR_LITERAL("\\") + relative_path;
+System::StrType System::Join(const StrType& path1, const StrType& path2) {
+  return path1 + RTW_SYS_STR_LITERAL("\\") + path2;
 }
 
 int System::Exec(const System::StrType& executable,
@@ -118,8 +120,8 @@ int System::Exec(const System::StrType& executable,
   return exit_status;
 }
 
-int System::UnTar(const System::StrType &tar_file,
-                  const System::StrType &out_dir) {
+int System::UnTar(const System::StrType& tar_file,
+                  const System::StrType& out_dir) {
   // This currently not implemented and should be phased out
   std::cout << "error: Not implemented" << std::endl;
   return 1;

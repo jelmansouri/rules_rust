@@ -346,9 +346,7 @@ def construct_arguments(
     # have -s if needed.
     maybe_rename = ""
     if crate_info.type == "bin" and crate_info.output != None:
-        generated_file = crate_info.name
-        if toolchain.target_arch == "wasm32":
-            generated_file = generated_file + ".wasm"
+        generated_file = crate_info.name + toolchain.binary_ext
         src = "/".join([crate_info.output.dirname, generated_file])
         dst = crate_info.output.path
         if src != dst:

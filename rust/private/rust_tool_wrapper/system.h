@@ -30,31 +30,19 @@ class System {
   using EnvironmentBlock = std::vector<StrType>;
 
  public:
-  static StrType ToStrType(const std::string& string) {
-#if defined(RTW_WIN_UNICODE)
-    return std::wstring_convert<std::codecvt_utf8<wchar_t>>().from_bytes(
-        string);
-#else
-    return string;
-#endif  // defined(RTW_WIN_UNICODE)
-  }
+  static StrType ToStrType(const std::string& string);
 
   static StrType ComposeEnvironmentVariable(const StrType& key,
-                                            const StrType& value) {
-    StrType env = key;
-    env.push_back(RTW_SYS_STR_LITERAL('='));
-    env += (value);
-    return env;
-  }
+                                            const StrType& value);
 
   static StrType GetWorkingDirectory();
-  static StrType JoinWithWorkingDirectory(const StrType& relative_path);
+  static StrType Join(const StrType& path1, const StrType& path2);
 
   static int Exec(const System::StrType& executable, const Arguments& arguments,
                   const EnvironmentBlock& environment_block);
 
   static int UnTar(const System::StrType& tar_file,
-                    const System::StrType& out_dir);
+                   const System::StrType& out_dir);
 };
 
 }  // namespace rust_tool_wrapper
