@@ -36,8 +36,6 @@ int main(int argc, const char* argv[], const char* envp[]) {
       System::ComposeEnvironmentVariable(RTW_SYS_STR_LITERAL("OUT_DIR"),
                                          out_dir);
 
-    } else if (arg == RTW_SYS_STR_LITERAL("--tar-file")) {
-      tar_file = argv[++i];
     } else if (arg == RTW_SYS_STR_LITERAL("--build-env-file")) {
       std::ifstream env_file(argv[++i]);
       std::string line;
@@ -70,10 +68,6 @@ int main(int argc, const char* argv[], const char* envp[]) {
         arguments.push_back(argv[i]);
       }
     }
-  }
-
-  if (!tar_file.empty()) {
-    System::UnTar(tar_file, out_dir);
   }
 
   for (int i = 0; envp[i] != nullptr; ++i) {

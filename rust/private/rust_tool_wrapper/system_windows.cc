@@ -6,8 +6,6 @@
 
 #include <windows.h>
 
-#include "third_party/microtar/src/microtar.h"
-
 namespace rust_tool_wrapper {
 
 namespace {
@@ -66,7 +64,7 @@ void MakeEnvironmentBlock(const System::EnvironmentBlock& environment_block,
 }  // namespace
 
 System::StrType System::GetWorkingDirectory() {
-  const DWORD kMaxBufferLength = 2048;
+  const DWORD kMaxBufferLength = 4096;
   TCHAR buffer[kMaxBufferLength];
   if (::GetCurrentDirectory(kMaxBufferLength, buffer) == 0) {
     return System::StrType{};
@@ -119,8 +117,5 @@ int System::Exec(const System::StrType& executable,
   CloseHandle(process_info.hProcess);
   return exit_status;
 }
-
-void System::UnTar(const System::StrType& tar_file,
-                  const System::StrType& out_dir) {}
 
 }  // namespace rust_tool_wrapper

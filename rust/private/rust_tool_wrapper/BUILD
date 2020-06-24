@@ -58,7 +58,4 @@ cc_binary(
         ],
     }),
     visibility = ["//visibility:public"],
-    deps = [
-        "@io_bazel_rules_rust//third_party/microtar",
-    ],
 )
