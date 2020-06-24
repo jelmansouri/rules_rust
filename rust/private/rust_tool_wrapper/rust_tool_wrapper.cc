@@ -34,7 +34,7 @@ int main(int argc, const char* argv[], const char* envp[]) {
     if (arg == RTW_SYS_STR_LITERAL("--tool-path")) {
       tool_path = argv[++i];
     } else if (arg == RTW_SYS_STR_LITERAL("--out-dir")) {
-      out_dir = System::Join(System::GetWorkingDirectory(), argv[++i]);
+      out_dir = System::JoinPaths(System::GetWorkingDirectory(), argv[++i]);
       environment_block.push_back(System::ComposeEnvironmentVariable(
           RTW_SYS_STR_LITERAL("OUT_DIR"), out_dir));
     } else if (arg == RTW_SYS_STR_LITERAL("--tar-file")) {
@@ -50,17 +50,18 @@ int main(int argc, const char* argv[], const char* envp[]) {
       std::string line;
       while (std::getline(env_file, line)) {
         // replace <EXEC_ROOT> by the exec root
+        const System::StrType token = RTW_SYS_STR_LITERAL("<EXEC_ROOT>");
         System::StrType sys_line = System::ToStrType(line);
-        std::size_t pos = sys_line.find(RTW_SYS_STR_LITERAL("<EXEC_ROOT>"));
+        std::size_t pos = sys_line.find(token);
         if (pos != std::string::npos) {
-          sys_line.replace(pos, 11, System::GetWorkingDirectory());
+          sys_line.replace(pos, token.size(), System::GetWorkingDirectory());
         }
         arguments.push_back(sys_line);
       }
     } else if (arg == RTW_SYS_STR_LITERAL("--package-dir")) {
       environment_block.push_back(System::ComposeEnvironmentVariable(
           RTW_SYS_STR_LITERAL("CARGO_MANIFEST_DIR"),
-          System::Join(System::GetWorkingDirectory(), argv[++i])));
+          System::JoinPaths(System::GetWorkingDirectory(), argv[++i])));
     } else if (arg == RTW_SYS_STR_LITERAL("--maker-path")) {
       maker_path = argv[++i];
     } else if (arg == RTW_SYS_STR_LITERAL("--rename")) {

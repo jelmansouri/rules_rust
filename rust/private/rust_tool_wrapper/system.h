@@ -34,7 +34,7 @@ class System {
                                             const StrType& value);
 
   static StrType GetWorkingDirectory();
-  static StrType Join(const StrType& path1, const StrType& path2);
+  static StrType JoinPaths(const StrType& path1, const StrType& path2);
 
   static int Exec(const StrType& executable, const Arguments& arguments,
                   const EnvironmentBlock& environment_block);

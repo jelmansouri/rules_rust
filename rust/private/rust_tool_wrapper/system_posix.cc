@@ -20,7 +20,7 @@ System::StrType System::GetWorkingDirectory() {
   return System::StrType{cwd};
 }
 
-System::StrType System::Join(const StrType &path1, const StrType &path2) {
+System::StrType System::JoinPaths(const StrType &path1, const StrType &path2) {
   return path1 + "/" + path2;
 }
 
@@ -32,7 +32,7 @@ int System::Exec(const System::StrType &executable,
     return -1;
   } else if (child_pid == 0) {
     std::vector<char *> argv;
-    std::string argv0 = Join(GetWorkingDirectory(), executable);
+    std::string argv0 = JoinPaths(GetWorkingDirectory(), executable);
     argv.push_back(&argv0[0]);
     for (const StrType &argument : arguments) {
       argv.push_back(const_cast<char *>(argument.c_str()));

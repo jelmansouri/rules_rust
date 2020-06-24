@@ -74,7 +74,7 @@ System::StrType System::GetWorkingDirectory() {
   return System::StrType{buffer};
 }
 
-System::StrType System::Join(const StrType& path1, const StrType& path2) {
+System::StrType System::JoinPaths(const StrType& path1, const StrType& path2) {
   return path1 + RTW_SYS_STR_LITERAL("\\") + path2;
 }
 
