@@ -122,12 +122,12 @@ def collect_deps(label, deps, proc_macro_deps, aliases, toolchain):
     for dep in deps:
         if CrateInfo in dep:
             if dep[CrateInfo].type == "proc-macro":
-                fail(
-                    "{} listed {} in its deps, but it is a proc-macro. It should instead be in proc-macro-deps.".format(
-                        label,
-                        dep.label,
-                    ),
-                )
+              fail(
+                  "{} listed {} in its deps, but it is a proc-macro. It should instead be in the bazel property proc_macro_deps.".format(
+                      label,
+                      dep.label,
+                  )
+              )
     for dep in proc_macro_deps:
         type = dep[CrateInfo].type
         if type != "proc-macro":
