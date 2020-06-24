@@ -52,6 +52,9 @@ class System {
 
   static int Exec(const System::StrType& executable, const Arguments& arguments,
                   const EnvironmentBlock& environment_block);
+
+  static int UnTar(const System::StrType& tar_file,
+                    const System::StrType& out_dir);
 };
 
 }  // namespace rust_tool_wrapper

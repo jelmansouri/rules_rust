@@ -1,16 +1,20 @@
 #include "rust/private/rust_tool_wrapper/system.h"
 
-//
+#include <iostream>
+#include <thread>
+#include <vector>
 
 #include <fcntl.h>
 #include <poll.h>
 #include <signal.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <unistd.h>
 
 namespace rust_tool_wrapper {
 
 System::StrType System::GetWorkingDirectory() {
-  const DWORD kMaxBufferLength = 4096;
+  const size_t kMaxBufferLength = 4096;
   char cwd[kMaxBufferLength];
   if (getcwd(cwd, sizeof(cwd)) == NULL) {
     return System::StrType{};
@@ -25,25 +29,28 @@ System::StrType System::JoinWithWorkingDirectory(const StrType &relative_path) {
 int System::Exec(const System::StrType &executable,
                  const System::Arguments &arguments,
                  const System::EnvironmentBlock &environment_block) {
-  id_type child_pid = fork();
+  pid_t child_pid = fork();
   if (child_pid < 0) {
     return -1;
   } else if (child_pid == 0) {
-    std::vector<const char *> argv;
+    std::vector<char *> argv;
+    std::string argv0 = JoinWithWorkingDirectory(executable);
+    argv.push_back(&argv0[0]);
     for (const StrType &argument : arguments) {
-      argv.push_back(argument.c_str());
+      argv.push_back(const_cast<char *>(argument.c_str()));
     }
     argv.push_back(nullptr);
 
-    std::vector<const char *> envp;
+    std::vector<char *> envp;
     for (const StrType &ev : environment_block) {
-      envp.push_back(ev.c_str());
+      envp.push_back(const_cast<char *>(ev.c_str()));
     }
     envp.push_back(nullptr);
 
     umask(022);
-
+    
     execve(executable.c_str(), argv.data(), envp.data());
+
     return -1;
   }
 
@@ -53,6 +60,25 @@ int System::Exec(const System::StrType &executable,
   } while (err == -1 && errno == EINTR);
 
   return exit_status;
+}
+
+int System::UnTar(const System::StrType &tar_file,
+                  const System::StrType &out_dir) {
+  System::StrType mkdir_cmd = "mkdir -p ";
+  mkdir_cmd += out_dir;
+  int exit_code = system(mkdir_cmd.c_str());
+  if (exit_code != 0) {
+    return exit_code;
+  }
+  System::StrType tar_cmd = "tar -xzf ";
+  tar_cmd += tar_file;
+  tar_cmd += " -C ";
+  tar_cmd += out_dir;
+  exit_code = system(tar_cmd.c_str());
+  if (exit_code != 0) {
+    return exit_code;
+  }
+  return 0;
 }
 
 }  // namespace rust_tool_wrapper

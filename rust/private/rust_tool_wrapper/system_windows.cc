@@ -118,4 +118,11 @@ int System::Exec(const System::StrType& executable,
   return exit_status;
 }
 
+int System::UnTar(const System::StrType &tar_file,
+                  const System::StrType &out_dir) {
+  // This currently not implemented and should be phased out
+  std::cout << "error: Not implemented" << std::endl;
+  return 1;
+}
+
 }  // namespace rust_tool_wrapper

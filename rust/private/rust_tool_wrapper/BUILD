@@ -56,6 +56,7 @@ cc_binary(
             "UNICODE",
             "_UNICODE",
         ],
+        "//conditions:default": [],
     }),
     visibility = ["//visibility:public"],
 )

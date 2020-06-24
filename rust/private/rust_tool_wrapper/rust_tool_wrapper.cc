@@ -8,14 +8,15 @@
 
 #include "rust/private/rust_tool_wrapper/system.h"
 
-// Simple rustc wrapper allowing us to prepare the context to call
-// Since it's only used as a private implementation detail of a rule and not
-// user invoked we don't bother with error checking.
+// Simple rust tools wrapper allowing us to prepare the context to call rustc or
+// clippy. Since it's only used as a private implementation detail of a rule and
+// not user invoked we don't bother with error checking.
 #if defined(RTW_WIN_UNICODE)
 int wmain(int argc, const wchar_t* argv[], const wchar_t* envp[]) {
 #else
 int main(int argc, const char* argv[], const char* envp[]) {
 #endif  // defined(RTW_WIN_UNICODE)
+
   using namespace rust_tool_wrapper;
 
   // Parse args.
@@ -32,10 +33,11 @@ int main(int argc, const char* argv[], const char* envp[]) {
     if (arg == RTW_SYS_STR_LITERAL("--tool-path")) {
       tool_path = argv[++i];
     } else if (arg == RTW_SYS_STR_LITERAL("--out-dir")) {
-      out_dir = System::JoinWithWorkingDirectory(arg);
-      System::ComposeEnvironmentVariable(RTW_SYS_STR_LITERAL("OUT_DIR"),
-                                         out_dir);
-
+      out_dir = System::JoinWithWorkingDirectory(argv[++i]);
+      environment_block.push_back(System::ComposeEnvironmentVariable(
+          RTW_SYS_STR_LITERAL("OUT_DIR"), out_dir));
+    } else if (arg == RTW_SYS_STR_LITERAL("--tar-file")) {
+      tar_file = argv[++i];
     } else if (arg == RTW_SYS_STR_LITERAL("--build-env-file")) {
       std::ifstream env_file(argv[++i]);
       std::string line;
@@ -70,19 +72,29 @@ int main(int argc, const char* argv[], const char* envp[]) {
     }
   }
 
+  if (!tar_file.empty()) {
+    int exit_code = System::UnTar(tar_file, out_dir);
+    if (exit_code != 0) {
+      return exit_code;
+    }
+  }
+
   for (int i = 0; envp[i] != nullptr; ++i) {
     environment_block.push_back(envp[i]);
   }
+
   int exit_code = System::Exec(tool_path, arguments, environment_block);
   if (exit_code == 0) {
     if (!maker_path.empty()) {
       std::ofstream file(maker_path);
     }
+    // we perform a rename if necessary
     if (!rename_from.empty() && !rename_to.empty()) {
       std::ifstream source(rename_from, std::ios::binary);
       std::ofstream dest(rename_to, std::ios::binary);
       dest << source.rdbuf();
     }
   }
+
   return exit_code;
 }
