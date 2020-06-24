@@ -17,11 +17,6 @@ alias(
 
 toolchain_type(name = "toolchain")
 
-py_binary(
-    name = "optional_output_wrapper",
-    srcs = ["optional_output_wrapper.py"],
-)
-
 toolchain(
     name = "default-proto-toolchain",
     toolchain = ":default-proto-toolchain-impl",
