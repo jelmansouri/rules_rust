@@ -12,8 +12,8 @@ load(
 cargo_build_script(
     name = "build_script",
     srcs = ["build_script.rs"],
-    data = ["test.txt"],
     crate_features = ["bleh"],
+    data = ["test.txt"],
 )
 
 rust_library(

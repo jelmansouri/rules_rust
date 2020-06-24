@@ -18,7 +18,7 @@ extern crate cargo_build_script_output_parser;
 
 use cargo_build_script_output_parser::{BuildScriptOutput, CompileAndLinkFlags};
 use std::env;
-use std::fs::{create_dir_all, write};
+use std::fs::{create_dir_all, read_to_string, write};
 use std::path::Path;
 use std::process::{exit, Command};
 
@@ -50,14 +50,30 @@ fn main() {
             let out_dir_abs = exec_root.join(&out_dir);
             // For some reason Google's RBE does not create the output directory, force create it.
             create_dir_all(&out_dir_abs).expect(&format!("Failed to make output directory: {:?}", out_dir_abs));
-
+            
             let mut command = Command::new(exec_root.join(&progname));
             command
-                .args(args)
                 .current_dir(manifest_dir.clone())
                 .env("OUT_DIR", out_dir_abs)
                 .env("CARGO_MANIFEST_DIR", manifest_dir)
                 .env("RUSTC", rustc);
+
+            while let Some(dep_env_path) = args.next() {
+                if let Ok(contents) = read_to_string(dep_env_path) {
+                    for line in contents.split('\n') {
+                        let mut key_val = line.splitn(2, '=');
+                        match (key_val.next(), key_val.next()) {
+                            (Some(key), Some(value)) => {
+                                command.env(key, value);
+                            }
+                            _ => {
+                                eprintln!("error: Wrong environment file format");
+                                exit(1);
+                            }
+                        }
+                    }
+                }
+            }
 
             if let Some(cc) = cc {
                 command.env("CC", cc);
