@@ -121,7 +121,7 @@ impl BuildScriptOutput {
                 }
             })
             .collect::<Vec<_>>()
-            .join(" ")
+            .join("\n")
     }
 
     /// Convert a vector of [BuildScriptOutput] into a list of dependencies environment variables.
@@ -143,7 +143,7 @@ impl BuildScriptOutput {
                 }
             })
             .collect::<Vec<_>>()
-            .join(" ")
+            .join("\n")
     }
 
     /// Convert a vector of [BuildScriptOutput] into a flagfile.
@@ -161,8 +161,8 @@ impl BuildScriptOutput {
             }
         }
         CompileAndLinkFlags {
-            compile_flags: compile_flags.join(" "),
-            link_flags: link_flags.join(" ").replace(exec_root, "${EXEC_ROOT}"),
+            compile_flags: compile_flags.join("\n"),
+            link_flags: link_flags.join("\n").replace(exec_root, "<EXEC_ROOT>"),
         }
     }
 }
@@ -204,19 +204,19 @@ cargo:version_number=1010107f
 
         assert_eq!(
             BuildScriptOutput::to_dep_env(&result, "my-crate-sys"),
-            "DEP_MY_CRATE_VERSION=123 DEP_MY_CRATE_VERSION_NUMBER=1010107f".to_owned()
+            "DEP_MY_CRATE_VERSION=123\nDEP_MY_CRATE_VERSION_NUMBER=1010107f".to_owned()
         );
         assert_eq!(
             BuildScriptOutput::to_env(&result),
-            "FOO=BAR BAR=FOO".to_owned()
+            "FOO=BAR\nBAR=FOO".to_owned()
         );
         assert_eq!(
             BuildScriptOutput::to_flags(&result, "/some/absolute/path"),
             CompileAndLinkFlags {
                 // -Lblah was output as a rustc-flags, so even though it probably _should_ be a link
                 // flag, we don't treat it like one.
-                compile_flags: "-Lblah --cfg=feature=awesome".to_owned(),
-                link_flags: "-lsdfsdf -L${EXEC_ROOT}/bleh".to_owned(),
+                compile_flags: "-Lblah\n--cfg=feature=awesome".to_owned(),
+                link_flags: "-lsdfsdf\n-L<EXEC_ROOT>/bleh".to_owned(),
             }
         );
     }
