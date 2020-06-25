@@ -122,12 +122,12 @@ def collect_deps(label, deps, proc_macro_deps, aliases, toolchain):
     for dep in deps:
         if CrateInfo in dep:
             if dep[CrateInfo].type == "proc-macro":
-              fail(
-                  "{} listed {} in its deps, but it is a proc-macro. It should instead be in the bazel property proc_macro_deps.".format(
-                      label,
-                      dep.label,
-                  )
-              )
+                fail(
+                    "{} listed {} in its deps, but it is a proc-macro. It should instead be in the bazel property proc_macro_deps.".format(
+                        label,
+                        dep.label,
+                    ),
+                )
     for dep in proc_macro_deps:
         type = dep[CrateInfo].type
         if type != "proc-macro":
@@ -351,7 +351,7 @@ def construct_arguments(
         dst = crate_info.output.path
         if src != dst:
             args.add_all(["--rename", src, dst])
-    
+
     if maker_path != None:
         args.add("--maker-path", maker_path)
 
@@ -506,7 +506,7 @@ def rustc_compile_action(
             # nb. This field is required for cc_library to depend on our output.
             files = depset([crate_info.output]),
             runfiles = runfiles,
-            executable = crate_info.output if crate_info.type == "bin" or out_binary else None,
+            executable = crate_info.output if crate_info.type == "bin" or "--test" in rust_flags or out_binary else None,
         ),
     ]
 
@@ -531,6 +531,7 @@ def _create_extra_input_args(ctx, file, build_info, dep_info):
     if build_info:
         out_dir = build_info.out_dir.path
         build_env_file = build_info.rustc_env.path
+
         # out_dir will be added as input by the transitive_build_infos loop below.
         build_flags_files.append(build_info.flags.path)
     elif tar_file_attr:
