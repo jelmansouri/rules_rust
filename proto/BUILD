@@ -1,4 +1,5 @@
 load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+load("//rust:rust.bzl", "rust_binary")
 load(":toolchain.bzl", "rust_proto_toolchain")
 
 package(default_visibility = ["//visibility:public"])
@@ -14,6 +15,12 @@ alias(
 )
 
 toolchain_type(name = "toolchain")
+
+rust_binary(
+    name = "optional_output_wrapper",
+    srcs = ["optional_output_wrapper.rs"],
+    visibility = ["//visibility:public"],
+)
 
 toolchain(
     name = "default-proto-toolchain",
