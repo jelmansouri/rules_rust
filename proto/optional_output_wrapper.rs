@@ -21,7 +21,6 @@ use std::process::Command;
 // A simple wrapper around a binary to ensure we always create some outputs
 // Optional outputs are not available in Skylark :(
 // Syntax: $0 output1 output2 ... -- program  [arg1...argn]
-
 fn ensure() -> Result<i32, Box<dyn error::Error>> {
     let index = args().position(|a| a == "--").ok_or("no --")?;
     let optional_outputs = args().take(index).collect::<Vec<String>>();
