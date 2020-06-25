@@ -19,7 +19,7 @@ System::StrType System::ComposeEnvironmentVariable(const StrType& key,
                                                    const StrType& value) {
   StrType env = key;
   env.push_back(RTW_SYS_STR_LITERAL('='));
-  env += (value);
+  env += value;
   return env;
 }
 
