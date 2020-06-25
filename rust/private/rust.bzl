@@ -184,7 +184,7 @@ def _rust_test_common(ctx, toolchain, crate_name, output):
         test_binary: The File object for the test binary.
     """
 
-    if hasattr(ctx.attr, "crate"):
+    if ctx.attr.crate:
         # Target is building the crate in `test` config
         # Build the test binary using the dependency's srcs.
         crate = ctx.attr.crate[CrateInfo]
