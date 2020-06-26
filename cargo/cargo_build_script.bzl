@@ -35,7 +35,6 @@ def _cargo_build_script_run(ctx, script):
         "HOST": toolchain.exec_triple,
         "OPT_LEVEL": compilation_mode_opt_level,
         "RUSTC": toolchain.rustc.path,
-        "RUST_BACKTRACE": "full",
         "TARGET": toolchain.target_triple,
         # OUT_DIR is set by the runner itself, rather than on the action.
     }
@@ -45,10 +44,15 @@ def _cargo_build_script_run(ctx, script):
     _, _, linker_env = get_linker_and_args(ctx, None)
     env.update(**linker_env)
 
-    cc_executable = cc_toolchain and cc_toolchain.compiler_executable
-    if cc_executable:
-        env["CC"] = cc_executable
+    if cc_toolchain:
         toolchain_tools.append(cc_toolchain.all_files)
+
+        cc_executable = cc_toolchain.compiler_executable
+        if cc_executable:
+            env["CC"] = cc_executable
+        ar_executable = cc_toolchain.ar_executable
+        if ar_executable:
+            env["AR"] = ar_executable
 
     for f in ctx.attr.crate_features:
         env["CARGO_FEATURE_" + f.upper().replace("-", "_")] = "1"

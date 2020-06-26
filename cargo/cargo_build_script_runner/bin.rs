@@ -18,11 +18,12 @@ extern crate cargo_build_script_output_parser;
 
 use cargo_build_script_output_parser::{BuildScriptOutput, CompileAndLinkFlags};
 use std::env;
+use std::ffi::OsString;
 use std::fs::{create_dir_all, write};
 use std::path::Path;
-use std::process::{exit, Command};
+use std::process::Command;
 
-fn main() {
+fn main() -> Result<(), String> {
     // We use exec_root.join rather than std::fs::canonicalize, to avoid resolving symlinks, as
     // some execution strategies and remote execution environments may use symlinks in ways which
     // canonicalizing them may break them, e.g. by having input files be symlinks into a /cas
@@ -36,15 +37,6 @@ fn main() {
     let manifest_dir = exec_root.join(&manifest_dir_env);
     let rustc = exec_root.join(&rustc_env);
 
-    let cc = env::var_os("CC").map(|env_var| {
-        let cc_path = Path::new(&env_var);
-        if cc_path.is_relative() {
-            exec_root.join(cc_path).into_os_string()
-        } else {
-            env_var
-        }
-    });
-
     match (args.next(), args.next(), args.next(), args.next(), args.next(), args.next(), args.next()) {
         (Some(progname), Some(crate_name), Some(out_dir), Some(envfile), Some(flagfile), Some(linkflags), Some(depenvfile)) => {
             let out_dir_abs = exec_root.join(&out_dir);
@@ -57,13 +49,34 @@ fn main() {
                 .current_dir(manifest_dir.clone())
                 .env("OUT_DIR", out_dir_abs)
                 .env("CARGO_MANIFEST_DIR", manifest_dir)
-                .env("RUSTC", rustc);
+                .env("RUSTC", rustc)
+                .env("RUST_BACKTRACE", "full");
 
-            if let Some(cc) = cc {
-                command.env("CC", cc);
+            if let Some(cc_path) = env::var_os("CC") {
+                command.env("CC", absolutify(&exec_root, cc_path));
+            }
+            if let Some(ar_path) = env::var_os("AR") {
+                // The default OSX toolchain uses libtool as ar_executable not ar.
+                // This doesn't work when used as $AR, so simply don't set it - tools will probably fall back to
+                // /usr/bin/ar which is probably good enough.
+                if Path::new(&ar_path).file_name() == Some("libtool".as_ref()) {
+                    command.env_remove("AR");
+                } else {
+                    command.env("AR", absolutify(&exec_root, ar_path));
+                }
             }
 
-            let output = BuildScriptOutput::from_command(&mut command);
+            let output = BuildScriptOutput::from_command(&mut command).map_err(|exit_code| {
+                format!(
+                    "Build script process failed{}",
+                    if let Some(exit_code) = exit_code {
+                        format!(" with exit code {}", exit_code)
+                    } else {
+                        String::new()
+                    }
+                )
+            })?;
+
             write(&envfile, BuildScriptOutput::to_env(&output).as_bytes())
                 .expect(&format!("Unable to write file {:?}", envfile));
             write(&depenvfile, BuildScriptOutput::to_dep_env(&output, &crate_name).as_bytes())
@@ -75,10 +88,19 @@ fn main() {
                 .expect(&format!("Unable to write file {:?}", flagfile));
             write(&linkflags, link_flags.as_bytes())
                 .expect(&format!("Unable to write file {:?}", linkflags));
+            Ok(())
         }
         _ => {
-            eprintln!("Usage: $0 progname crate_name out_dir envfile flagfile linkflagfile depenvfile [arg1...argn]");
-            exit(1);
+            Err("Usage: $0 progname crate_name out_dir envfile flagfile linkflagfile depenvfile [arg1...argn]".to_owned())
         }
+    }
+}
+
+fn absolutify(root: &Path, maybe_relative: OsString) -> OsString {
+    let path = Path::new(&maybe_relative);
+    if path.is_relative() {
+        root.join(path).into_os_string()
+    } else {
+        maybe_relative
     }
 }
