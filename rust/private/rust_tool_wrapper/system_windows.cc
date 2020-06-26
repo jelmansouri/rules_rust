@@ -112,6 +112,11 @@ int System::Exec(const System::StrType& executable,
       /*lpStartupInfo*/ &startup_info,
       /*lpProcessInformation*/ &process_info);
 
+  if (success == FALSE) {
+    std::cerr << "error: Failed to launch a new process." << std::endl;
+    return -1;
+  }
+
   DWORD exit_status;
   WaitForSingleObject(process_info.hProcess, INFINITE);
   if (GetExitCodeProcess(process_info.hProcess, &exit_status) == FALSE)

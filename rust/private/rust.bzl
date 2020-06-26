@@ -361,7 +361,7 @@ _rust_common_attrs = {
         default = "@io_bazel_rules_rust//rust/private/rust_tool_wrapper:rust_tool_wrapper",
         executable = True,
         allow_single_file = True,
-        cfg = "host",
+        cfg = "exec",
     ),
 }
 
