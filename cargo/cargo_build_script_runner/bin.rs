@@ -67,11 +67,14 @@ fn main() {
                                 command.env(key, value);
                             }
                             _ => {
-                                eprintln!("error: Wrong environment file format");
+                                eprintln!("error: Wrong environment file format, should not happen");
                                 exit(1);
                             }
                         }
                     }
+                } else {
+                    eprintln!("error: Dependency environment file unreadable");
+                    exit(1);
                 }
             }
 
