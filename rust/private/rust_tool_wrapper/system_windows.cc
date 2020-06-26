@@ -11,7 +11,7 @@
 namespace rust_tool_wrapper {
 
 namespace {
-// taken from:
+// Algorithm used:
 // https://docs.microsoft.com/en-us/archive/blogs/twistylittlepassagesallalike/everyone-quotes-command-line-arguments-the-wrong-way
 
 void ArgumentQuote(const System::StrType& argument,
