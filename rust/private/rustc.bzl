@@ -520,7 +520,7 @@ def _create_extra_input_args(ctx, file, build_info, dep_info):
 
     input_files = []
 
-    # Argumentss to the commandline line wrapper that are going to be used
+    # Arguments to the commandline line wrapper that are going to be used
     # to create the final command line
     out_dir = None
     tar_file = None

@@ -29,6 +29,7 @@ int System::Exec(const System::StrType &executable,
                  const System::EnvironmentBlock &environment_block) {
   pid_t child_pid = fork();
   if (child_pid < 0) {
+    std::cerr << "error: Failed to fork the current process." << std::endl;
     return -1;
   } else if (child_pid == 0) {
     std::vector<char *> argv;
@@ -48,7 +49,7 @@ int System::Exec(const System::StrType &executable,
     umask(022);
 
     execve(executable.c_str(), argv.data(), envp.data());
-
+    std::cerr << "error: Failed to exec the new process." << std::endl;
     return -1;
   }
 
