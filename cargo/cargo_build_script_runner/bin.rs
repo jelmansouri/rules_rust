@@ -60,14 +60,12 @@ fn main() -> Result<(), String> {
                                 command.env(key, value);
                             }
                             _ => {
-                                eprintln!("error: Wrong environment file format, should not happen");
-                                exit(1);
+                                return Err("error: Wrong environment file format, should not happen".to_owned())
                             }
                         }
                     }
                 } else {
-                    eprintln!("error: Dependency environment file unreadable");
-                    exit(1);
+                    return Err("error: Dependency environment file unreadable".to_owned())
                 }
             }
 
