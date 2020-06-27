@@ -128,7 +128,8 @@ int System::Exec(const System::StrType& executable,
 int System::UnTar(const System::StrType& tar_file,
                   const System::StrType& out_dir) {
   // This currently not implemented and should be phased out
-  std::cout << "error: Not implemented" << std::endl;
+  std::cerr << "error: rust tooling wrapper System::UnTar not implemented"
+            << std::endl;
   return 1;
 }
 
