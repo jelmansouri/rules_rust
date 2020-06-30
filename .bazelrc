@@ -1,2 +1,0 @@
-# This is not enabled by default on windows and needs dev mode
-build --enable_runfiles
