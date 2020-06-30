@@ -57,6 +57,8 @@ def _cargo_build_script_run(ctx, script):
     for f in ctx.attr.crate_features:
         env["CARGO_FEATURE_" + f.upper().replace("-", "_")] = "1"
 
+    env.update(ctx.attr.build_script_env)
+
     tools = depset(
         direct = [
             script,
@@ -71,18 +73,18 @@ def _cargo_build_script_run(ctx, script):
     # available to the current crate build script.
     # See https://doc.rust-lang.org/cargo/reference/build-scripts.html#-sys-packages
     # for details.
-    cmd = ""
+    args = ctx.actions.args()
+    args.add_all([script.path, crate_name, out_dir.path, env_out.path, flags_out.path, link_flags.path, dep_env_out.path])
     dep_env_files = []
     for dep in ctx.attr.deps:
         if DepInfo in dep and dep[DepInfo].dep_env:
             dep_env_file = dep[DepInfo].dep_env
-            cmd += "export $(cat %s); " % dep_env_file.path
+            args.add(dep_env_file.path)
             dep_env_files.append(dep_env_file)
-    cmd += "$@"
 
-    ctx.actions.run_shell(
-        command = cmd,
-        arguments = [ctx.executable._cargo_build_script_runner.path, script.path, crate_name, out_dir.path, env_out.path, flags_out.path, link_flags.path, dep_env_out.path],
+    ctx.actions.run(
+        executable = ctx.executable._cargo_build_script_runner,
+        arguments = [args],
         outputs = [out_dir, env_out, flags_out, link_flags, dep_env_out],
         tools = tools,
         inputs = dep_env_files,
@@ -113,6 +115,9 @@ _build_script_run = rule(
             cfg = "host",
             doc = "The binary script to run, generally a rust_binary target. ",
         ),
+        "build_script_env": attr.string_dict(
+            doc = "Environment variables for build scripts.",
+        ),
         "crate_name": attr.string(),
         "crate_features": attr.string_list(doc = "The list of rust features that the build script should consider activated."),
         "_cc_toolchain": attr.label(default = Label("@bazel_tools//tools/cpp:current_cc_toolchain")),
@@ -131,7 +136,12 @@ _build_script_run = rule(
     ],
 )
 
-def cargo_build_script(name, crate_name="", crate_features=[], deps=[], **kwargs):
+def cargo_build_script(name,
+                       crate_name = "",
+                       crate_features = [],
+                       deps = [],
+                       build_script_env = {},
+                       **kwargs):
     """
     Compile and execute a rust build script to generate build attributes
 
@@ -166,6 +176,8 @@ def cargo_build_script(name, crate_name="", crate_features=[], deps=[], **kwargs
         srcs = ["build.rs"],
         # Data are shipped during execution.
         data = ["src/lib.rs"],
+        # Environment variables passed during build.rs execution
+        build_script_env = {"CARGO_PKG_VERSION": "0.1.2"},
     )
 
     rust_library(
@@ -184,12 +196,13 @@ def cargo_build_script(name, crate_name="", crate_features=[], deps=[], **kwargs
         name = name + "_script_",
         crate_features = crate_features,
         deps = deps,
-        **kwargs,
+        **kwargs
     )
     _build_script_run(
         name = name,
         script = ":%s_script_" % name,
         crate_name = crate_name,
         crate_features = crate_features,
+        build_script_env = build_script_env,
         deps = deps,
     )

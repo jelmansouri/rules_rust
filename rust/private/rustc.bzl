@@ -514,29 +514,19 @@ def add_edition_flags(args, crate):
         args.add("--edition={}".format(crate.edition))
 
 def _create_extra_input_args(ctx, file, build_info, dep_info):
-    tar_file_attr = getattr(file, "out_dir_tar", None)
-    if build_info and tar_file_attr:
-        fail("Target {} has both a build_script dependency and an out_dir_tar - this is not allowed.".format(ctx.label))
-
     input_files = []
 
     # Arguments to the commandline line wrapper that are going to be used
     # to create the final command line
     out_dir = None
-    tar_file = None
     build_env_file = None
     build_flags_files = []
 
     if build_info:
         out_dir = build_info.out_dir.path
         build_env_file = build_info.rustc_env.path
-
         # out_dir will be added as input by the transitive_build_infos loop below.
         build_flags_files.append(build_info.flags.path)
-    elif tar_file_attr:
-        out_dir = ".out-dir"
-        tar_file = tar_file_attr.path
-        input_files.append(tar_file_attr)
 
     # This should probably only actually be exposed to actions which link.
     for dep_build_info in dep_info.transitive_build_infos.to_list():
