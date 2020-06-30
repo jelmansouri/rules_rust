@@ -248,10 +248,10 @@ def _process_build_scripts(
         build_info,
         dep_info,
         compile_inputs):
-    extra_inputs, out_dir, tar_file, build_env_file, build_flags_files = _create_extra_input_args(ctx, file, build_info, dep_info)
+    extra_inputs, out_dir, build_env_file, build_flags_files = _create_extra_input_args(ctx, file, build_info, dep_info)
     if extra_inputs:
         compile_inputs = depset(extra_inputs, transitive = [compile_inputs])
-    return compile_inputs, out_dir, tar_file, build_env_file, build_flags_files
+    return compile_inputs, out_dir, build_env_file, build_flags_files
 
 def collect_inputs(
         ctx,
@@ -295,7 +295,6 @@ def construct_arguments(
         output_hash,
         rust_flags,
         out_dir,
-        tar_file,
         build_env_file,
         build_flags_files,
         maker_path):
@@ -310,9 +309,6 @@ def construct_arguments(
     args.add("--tool-path", tool_path)
     if out_dir != None:
         args.add("--out-dir", out_dir)
-
-    if tar_file != None:
-        args.add("--tar-file", tar_file)
 
     if build_env_file != None:
         args.add("--build-env-file", build_env_file)
@@ -444,7 +440,7 @@ def rustc_compile_action(
         toolchain,
     )
 
-    compile_inputs, out_dir, tar_file, build_env_file, build_flags_files = collect_inputs(
+    compile_inputs, out_dir, build_env_file, build_flags_files = collect_inputs(
         ctx,
         ctx.file,
         ctx.files,
@@ -464,7 +460,6 @@ def rustc_compile_action(
         output_hash,
         rust_flags,
         out_dir,
-        tar_file,
         build_env_file,
         build_flags_files,
         maker_path = None,
@@ -515,29 +510,19 @@ def add_edition_flags(args, crate):
         args.add("--edition={}".format(crate.edition))
 
 def _create_extra_input_args(ctx, file, build_info, dep_info):
-    tar_file_attr = getattr(file, "out_dir_tar", None)
-    if build_info and tar_file_attr:
-        fail("Target {} has both a build_script dependency and an out_dir_tar - this is not allowed.".format(ctx.label))
-
     input_files = []
 
-    # Argumentss to the commandline line wrapper that are going to be used
+    # Arguments to the commandline line wrapper that are going to be used
     # to create the final command line
     out_dir = None
-    tar_file = None
     build_env_file = None
     build_flags_files = []
 
     if build_info:
         out_dir = build_info.out_dir.path
         build_env_file = build_info.rustc_env.path
-
         # out_dir will be added as input by the transitive_build_infos loop below.
         build_flags_files.append(build_info.flags.path)
-    elif tar_file_attr:
-        out_dir = ".out-dir"
-        tar_file = tar_file_attr.path
-        input_files.append(tar_file_attr)
 
     # This should probably only actually be exposed to actions which link.
     for dep_build_info in dep_info.transitive_build_infos.to_list():
@@ -545,7 +530,7 @@ def _create_extra_input_args(ctx, file, build_info, dep_info):
         build_flags_files.append(dep_build_info.link_flags.path)
         input_files.append(dep_build_info.link_flags)
 
-    return input_files, out_dir, tar_file, build_env_file, build_flags_files
+    return input_files, out_dir, build_env_file, build_flags_files
 
 def _compute_rpaths(toolchain, output_dir, dep_info):
     """

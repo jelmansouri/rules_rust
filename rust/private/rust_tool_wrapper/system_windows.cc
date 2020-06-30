@@ -11,7 +11,7 @@
 namespace rust_tool_wrapper {
 
 namespace {
-// taken from:
+// Algorithm used:
 // https://docs.microsoft.com/en-us/archive/blogs/twistylittlepassagesallalike/everyone-quotes-command-line-arguments-the-wrong-way
 
 void ArgumentQuote(const System::StrType& argument,
@@ -112,19 +112,17 @@ int System::Exec(const System::StrType& executable,
       /*lpStartupInfo*/ &startup_info,
       /*lpProcessInformation*/ &process_info);
 
+  if (success == FALSE) {
+    std::cerr << "error: Failed to launch a new process." << std::endl;
+    return -1;
+  }
+
   DWORD exit_status;
   WaitForSingleObject(process_info.hProcess, INFINITE);
   if (GetExitCodeProcess(process_info.hProcess, &exit_status) == FALSE)
     exit_status = -1;
   CloseHandle(process_info.hProcess);
   return exit_status;
-}
-
-int System::UnTar(const System::StrType& tar_file,
-                  const System::StrType& out_dir) {
-  // This currently not implemented and should be phased out
-  std::cout << "error: Not implemented" << std::endl;
-  return 1;
 }
 
 }  // namespace rust_tool_wrapper

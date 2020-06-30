@@ -13,7 +13,7 @@ cargo_build_script(
     name = "build_script",
     srcs = ["build_script.rs"],
     crate_features = ["bleh"],
-    data = ["test.txt"],
+    build_script_env = {"SOME_ENV": "42"},
 )
 
 rust_library(

@@ -224,7 +224,7 @@ rust_proto_library = rule(
             default = "@io_bazel_rules_rust//rust/private/rust_tool_wrapper:rust_tool_wrapper",
             executable = True,
             allow_single_file = True,
-            cfg = "host",
+            cfg = "exec",
         ),
         "_optional_output_wrapper": attr.label(
             executable = True,
@@ -290,7 +290,7 @@ rust_grpc_library = rule(
             default = "@io_bazel_rules_rust//rust/private/rust_tool_wrapper:rust_tool_wrapper",
             executable = True,
             allow_single_file = True,
-            cfg = "host",
+            cfg = "exec",
         ),
         "_optional_output_wrapper": attr.label(
             executable = True,

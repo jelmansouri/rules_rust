@@ -29,6 +29,7 @@ int System::Exec(const System::StrType &executable,
                  const System::EnvironmentBlock &environment_block) {
   pid_t child_pid = fork();
   if (child_pid < 0) {
+    std::cerr << "error: Failed to fork the current process." << std::endl;
     return -1;
   } else if (child_pid == 0) {
     std::vector<char *> argv;
@@ -48,7 +49,7 @@ int System::Exec(const System::StrType &executable,
     umask(022);
 
     execve(executable.c_str(), argv.data(), envp.data());
-
+    std::cerr << "error: Failed to exec the new process." << std::endl;
     return -1;
   }
 
@@ -58,25 +59,6 @@ int System::Exec(const System::StrType &executable,
   } while (err == -1 && errno == EINTR);
 
   return exit_status;
-}
-
-int System::UnTar(const System::StrType &tar_file,
-                  const System::StrType &out_dir) {
-  System::StrType mkdir_cmd = "mkdir -p ";
-  mkdir_cmd += out_dir;
-  int exit_code = system(mkdir_cmd.c_str());
-  if (exit_code != 0) {
-    return exit_code;
-  }
-  System::StrType tar_cmd = "tar -xzf ";
-  tar_cmd += tar_file;
-  tar_cmd += " -C ";
-  tar_cmd += out_dir;
-  exit_code = system(tar_cmd.c_str());
-  if (exit_code != 0) {
-    return exit_code;
-  }
-  return 0;
 }
 
 }  // namespace rust_tool_wrapper

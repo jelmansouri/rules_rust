@@ -1,10 +1,7 @@
 #include <fstream>
 #include <iostream>
-#include <regex>
 #include <streambuf>
 #include <string>
-#include <unordered_map>
-#include <vector>
 
 #include "rust/private/rust_tool_wrapper/system.h"
 
@@ -22,7 +19,6 @@ int main(int argc, const char* argv[], const char* envp[]) {
   // Parse args.
   System::StrType tool_path;
   System::StrType out_dir;
-  System::StrType tar_file;
   System::StrType rename_from;
   System::StrType rename_to;
   System::StrType maker_path;
@@ -37,8 +33,6 @@ int main(int argc, const char* argv[], const char* envp[]) {
       out_dir = System::JoinPaths(System::GetWorkingDirectory(), argv[++i]);
       environment_block.push_back(System::ComposeEnvironmentVariable(
           RTW_SYS_STR_LITERAL("OUT_DIR"), out_dir));
-    } else if (arg == RTW_SYS_STR_LITERAL("--tar-file")) {
-      tar_file = argv[++i];
     } else if (arg == RTW_SYS_STR_LITERAL("--build-env-file")) {
       std::ifstream env_file(argv[++i]);
       std::string line;
@@ -71,14 +65,6 @@ int main(int argc, const char* argv[], const char* envp[]) {
       for (++i; i < argc; ++i) {
         arguments.push_back(argv[i]);
       }
-    }
-  }
-
-  // TODO: Remove out_dir_tar support
-  if (!tar_file.empty()) {
-    int exit_code = System::UnTar(tar_file, out_dir);
-    if (exit_code != 0) {
-      return exit_code;
     }
   }
 

@@ -43,6 +43,9 @@ _SYSTEM_TO_BINARY_EXT = {
     "darwin": "",
     # TODO(acmcarther): To be verified
     "emscripten": ".js",
+    # This is currently a hack allowing us to have the proper
+    # generated extension for the wasm target, similarly to the
+    # windows target
     "unknown": ".wasm",
 }
 
