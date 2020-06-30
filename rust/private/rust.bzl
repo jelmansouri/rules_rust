@@ -183,7 +183,7 @@ def _rust_binary_impl(ctx):
         ),
     )
 
-def _rust_test_common(ctx, toolchain, crate_name, output):
+def _rust_test_common(ctx, toolchain, output):
     """
     Builds a Rust test binary.
 
@@ -191,8 +191,9 @@ def _rust_test_common(ctx, toolchain, crate_name, output):
         ctx: The ctx object for the current target.
         test_binary: The File object for the test binary.
     """
-    toolchain = find_toolchain(ctx)
     _deprecated_attributes(ctx)
+
+    crate_name = ctx.label.name.replace("-", "_")
 
     if ctx.attr.crate:
         # Target is building the crate in `test` config
@@ -242,17 +243,15 @@ def _rust_test_common(ctx, toolchain, crate_name, output):
 def _rust_test_impl(ctx):
     toolchain = find_toolchain(ctx)
 
-    crate_name = ctx.label.name.replace("-", "_")
-
     output = ctx.actions.declare_file(
         ctx.label.name + toolchain.binary_ext,
     )
 
-    return _rust_test_common(ctx, toolchain, crate_name, output)
+    return _rust_test_common(ctx, toolchain, output)
 
 def _rust_benchmark_impl(ctx):
     _deprecated_attributes(ctx)
-    
+
     toolchain = find_toolchain(ctx)
 
     # Build the underlying benchmark binary.
@@ -260,7 +259,7 @@ def _rust_benchmark_impl(ctx):
         "{}_bin{}".format(ctx.label.name, toolchain.binary_ext),
         sibling = ctx.configuration.bin_dir,
     )
-    info = _rust_test_common(ctx, toolchain, crate_name, bench_binary)
+    info = _rust_test_common(ctx, toolchain, bench_binary)
 
     if toolchain.exec_triple.find("windows") != -1:
         bench_script = ctx.actions.declare_file(
@@ -270,9 +269,7 @@ def _rust_benchmark_impl(ctx):
         # Wrap the benchmark to run it as cargo would.
         ctx.actions.write(
             output = bench_script,
-            content = "\n".join([
-                "{} --bench || exit 1".format(bench_binary.short_path),
-            ]),
+            content = "{} --bench || exit 1".format(bench_binary.short_path),
             is_executable = True,
         )
     else:
