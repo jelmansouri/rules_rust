@@ -248,10 +248,10 @@ def _process_build_scripts(
         build_info,
         dep_info,
         compile_inputs):
-    extra_inputs, out_dir, tar_file, build_env_file, build_flags_files = _create_extra_input_args(ctx, file, build_info, dep_info)
+    extra_inputs, out_dir, build_env_file, build_flags_files = _create_extra_input_args(ctx, file, build_info, dep_info)
     if extra_inputs:
         compile_inputs = depset(extra_inputs, transitive = [compile_inputs])
-    return compile_inputs, out_dir, tar_file, build_env_file, build_flags_files
+    return compile_inputs, out_dir, build_env_file, build_flags_files
 
 def collect_inputs(
         ctx,
@@ -295,7 +295,6 @@ def construct_arguments(
         output_hash,
         rust_flags,
         out_dir,
-        tar_file,
         build_env_file,
         build_flags_files,
         maker_path):
@@ -310,9 +309,6 @@ def construct_arguments(
     args.add("--tool-path", tool_path)
     if out_dir != None:
         args.add("--out-dir", out_dir)
-
-    if tar_file != None:
-        args.add("--tar-file", tar_file)
 
     if build_env_file != None:
         args.add("--build-env-file", build_env_file)
@@ -443,7 +439,7 @@ def rustc_compile_action(
         toolchain,
     )
 
-    compile_inputs, out_dir, tar_file, build_env_file, build_flags_files = collect_inputs(
+    compile_inputs, out_dir, build_env_file, build_flags_files = collect_inputs(
         ctx,
         ctx.file,
         ctx.files,
@@ -463,7 +459,6 @@ def rustc_compile_action(
         output_hash,
         rust_flags,
         out_dir,
-        tar_file,
         build_env_file,
         build_flags_files,
         maker_path = None,
@@ -534,7 +529,7 @@ def _create_extra_input_args(ctx, file, build_info, dep_info):
         build_flags_files.append(dep_build_info.link_flags.path)
         input_files.append(dep_build_info.link_flags)
 
-    return input_files, out_dir, tar_file, build_env_file, build_flags_files
+    return input_files, out_dir, build_env_file, build_flags_files
 
 def _compute_rpaths(toolchain, output_dir, dep_info):
     """

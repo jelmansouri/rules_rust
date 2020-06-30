@@ -59,7 +59,7 @@ def _clippy_aspect_impl(target, ctx):
         toolchain,
     )
 
-    compile_inputs, out_dir, tar_file, build_env_file, build_flags_files = collect_inputs(
+    compile_inputs, out_dir, build_env_file, build_flags_files = collect_inputs(
         ctx,
         ctx.rule.file,
         ctx.rule.files,
@@ -83,7 +83,6 @@ def _clippy_aspect_impl(target, ctx):
         output_hash = repr(hash(root.path)),
         rust_flags = [],
         out_dir = out_dir,
-        tar_file = tar_file,
         build_env_file = build_env_file,
         build_flags_files = build_flags_files,
         maker_path = clippy_marker.path,

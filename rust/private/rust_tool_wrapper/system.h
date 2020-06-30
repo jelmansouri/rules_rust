@@ -47,9 +47,6 @@ class System {
   // It is meant to be called once during the lifetime of the parent process
   static int Exec(const StrType& executable, const Arguments& arguments,
                   const EnvironmentBlock& environment_block);
-
-  // Given an archive, uses the system tar utility to untar the archive
-  static int UnTar(const StrType& tar_file, const StrType& out_dir);
 };
 
 }  // namespace rust_tool_wrapper
