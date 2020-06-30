@@ -42,7 +42,7 @@ fn main() -> Result<(), String> {
             let out_dir_abs = exec_root.join(&out_dir);
             // For some reason Google's RBE does not create the output directory, force create it.
             create_dir_all(&out_dir_abs).expect(&format!("Failed to make output directory: {:?}", out_dir_abs));
-            
+
             let mut command = Command::new(exec_root.join(&progname));
             command
                 .current_dir(manifest_dir.clone())

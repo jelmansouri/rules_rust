@@ -251,8 +251,9 @@ def _rust_test_impl(ctx):
     return _rust_test_common(ctx, toolchain, crate_name, output)
 
 def _rust_benchmark_impl(ctx):
-    bench_script = ctx.outputs.executable
     _deprecated_attributes(ctx)
+    
+    toolchain = find_toolchain(ctx)
 
     # Build the underlying benchmark binary.
     bench_binary = ctx.actions.declare_file(

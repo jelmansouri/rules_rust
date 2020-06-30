@@ -14,7 +14,6 @@ def _cargo_build_script_run(ctx, script):
     compilation_mode_opt_level = get_compilation_mode_opts(ctx, toolchain).opt_level
 
     crate_name = ctx.attr.crate_name
-
     # Derive crate name from the rule label which is <crate_name>_build_script if not provided.
     if not crate_name:
         crate_name = ctx.label.name
