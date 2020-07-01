@@ -20,7 +20,6 @@ def _rust_doc_test_impl(ctx):
         fail("Expected rust library or binary.", "dep")
 
     crate = ctx.attr.dep[CrateInfo]
-    rust_doc_test = ctx.outputs.executable
 
     toolchain = find_toolchain(ctx)
 
@@ -28,11 +27,51 @@ def _rust_doc_test_impl(ctx):
 
     # Construct rustdoc test command, which will be written to a shell script
     # to be executed to run the test.
-    ctx.actions.write(
-        output = rust_doc_test,
-        content = _build_rustdoc_test_script(toolchain, dep_info, crate),
-        is_executable = True,
-    )
+    flags = _build_rustdoc_flags(dep_info, crate)
+    if toolchain.os == "windows":
+        rust_doc_test = ctx.actions.declare_file(
+            ctx.label.name + ".bat",
+        )
+        ctx.actions.write(
+            output = rust_doc_test,
+                       content = """\
+{rust_doc} --test ^
+    {crate_root} ^
+    --crate-name={crate_name} ^
+    {flags}
+""".format(
+                rust_doc = toolchain.rust_doc.path.replace("/", "\\"),
+                crate_root = crate.root.path,
+                crate_name = crate.name,
+                # TODO: Should be possible to do this with ctx.actions.Args, but can't seem to get them as a str and into the template.
+                flags = " ^\n    ".join(flags),
+            ),
+            is_executable = True,
+        )
+    else:
+        rust_doc_test = ctx.actions.declare_file(
+            ctx.label.name + ".sh",
+        )
+        ctx.actions.write(
+            output = rust_doc_test,
+            content = """\
+#!/usr/bin/env bash
+
+set -e;
+
+{rust_doc} --test \\
+    {crate_root} \\
+    --crate-name={crate_name} \\
+    {flags}
+""".format(
+                rust_doc = toolchain.rust_doc.path,
+                crate_root = crate.root.path,
+                crate_name = crate.name,
+                # TODO: Should be possible to do this with ctx.actions.Args, but can't seem to get them as a str and into the template.
+                flags = " \\\n    ".join(flags),
+            ),
+            is_executable = True,
+        )
 
     # The test script compiles the crate and runs it, so it needs both compile and runtime inputs.
     compile_inputs = depset(
@@ -52,12 +91,12 @@ def _rust_doc_test_impl(ctx):
         files = compile_inputs.to_list(),
         collect_data = True,
     )
-    return struct(runfiles = runfiles)
+    return struct(runfiles = runfiles, executable = rust_doc_test)
 
 def dirname(path_str):
     return "/".join(path_str.split("/")[:-1])
 
-def _build_rustdoc_test_script(toolchain, dep_info, crate):
+def _build_rustdoc_flags(dep_info, crate):
     """ Constructs the rustdoc script used to test `crate`. """
 
     d = dep_info
@@ -77,24 +116,7 @@ def _build_rustdoc_test_script(toolchain, dep_info, crate):
 
     edition_flags = ["--edition={}".format(crate.edition)] if crate.edition != "2015" else []
 
-    flags = link_search_flags + link_flags + edition_flags
-
-    return """\
-#!/usr/bin/env bash
-
-set -e;
-
-{rust_doc} --test \\
-    {crate_root} \\
-    --crate-name={crate_name} \\
-    {flags}
-""".format(
-        rust_doc = toolchain.rust_doc.path,
-        crate_root = crate.root.path,
-        crate_name = crate.name,
-        # TODO: Should be possible to do this with ctx.actions.Args, but can't seem to get them as a str and into the template.
-        flags = " \\\n    ".join(flags),
-    )
+    return link_search_flags + link_flags + edition_flags
 
 rust_doc_test = rule(
     _rust_doc_test_impl,

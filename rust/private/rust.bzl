@@ -75,7 +75,7 @@ def _determine_lib_name(name, crate_type, toolchain, lib_hash = ""):
               "please file an issue!").format(crate_type))
 
     prefix = "lib"
-    if (toolchain.target_triple.find("windows") != -1) and crate_type not in ("lib", "rlib"):
+    if toolchain.os == "windows" and crate_type not in ("lib", "rlib"):
         prefix = ""
 
     return "{prefix}{name}-{lib_hash}{extension}".format(
@@ -261,7 +261,7 @@ def _rust_benchmark_impl(ctx):
     )
     info = _rust_test_common(ctx, toolchain, bench_binary)
 
-    if toolchain.exec_triple.find("windows") != -1:
+    if toolchain.os == "windows":
         bench_script = ctx.actions.declare_file(
             ctx.label.name + ".bat",
         )
