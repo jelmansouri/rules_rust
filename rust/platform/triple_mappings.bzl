@@ -41,7 +41,6 @@ _SYSTEM_TO_BINARY_EXT = {
     "linux": "",
     "windows": ".exe",
     "darwin": "",
-    # TODO(acmcarther): To be verified
     "emscripten": ".js",
     # This is currently a hack allowing us to have the proper
     # generated extension for the wasm target, similarly to the
@@ -54,7 +53,6 @@ _SYSTEM_TO_STATICLIB_EXT = {
     "linux": ".a",
     "darwin": ".a",
     "windows": ".lib",
-    # TODO(acmcarther): To be verified
     "emscripten": ".js",
     "unknown": "",
 }
@@ -64,7 +62,6 @@ _SYSTEM_TO_DYLIB_EXT = {
     "linux": ".so",
     "darwin": ".dylib",
     "windows": ".dll",
-    # TODO(acmcarther): To be verified
     "emscripten": ".js",
     "unknown": ".wasm",
 }
