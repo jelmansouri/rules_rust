@@ -333,7 +333,9 @@ def construct_arguments(
     # `exec_root`. Since we cannot (seemingly) get the `exec_root` from skylark, we cheat a little
     # and use `${pwd}` which resolves the `exec_root` at action execution time.
     args.add("--subst", "pwd=${pwd}")
+    
     env["CARGO_MANIFEST_DIR"] = "${pwd}/" + ctx.build_file_path[:ctx.build_file_path.rfind("/")]
+    
     if out_dir != None:
         env["OUT_DIR"] = "${pwd}/" + out_dir
 
