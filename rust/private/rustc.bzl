@@ -318,8 +318,7 @@ def construct_arguments(
     if build_env_file != None:
         args.add("--env-file", build_env_file)
 
-    for f in build_flags_files:
-        args.add("--arg-file", f)
+    args.add_all(build_flags_files, before_each = "--arg-file")
 
     # Certain rust build processes expect to find files from the environment variable
     # `$CARGO_MANIFEST_DIR`. Examples of this include pest, tera, asakuma.
@@ -332,10 +331,9 @@ def construct_arguments(
     # Inference cannot be derived from `attr.crate_root`, as this points at a source file which may or
     # may not follow the `src/lib.rs` convention. As such we use `ctx.build_file_path` mapped into the
     # `exec_root`. Since we cannot (seemingly) get the `exec_root` from skylark, we cheat a little
-    # and use `$(pwd)` which resolves the `exec_root` at action execution time.
+    # and use `${pwd}` which resolves the `exec_root` at action execution time.
     args.add("--subst", "pwd=${pwd}")
-    package_dir = ctx.build_file_path[:ctx.build_file_path.rfind("/")]
-    env["CARGO_MANIFEST_DIR"] = "${pwd}/" + package_dir
+    env["CARGO_MANIFEST_DIR"] = "${pwd}/" + ctx.build_file_path[:ctx.build_file_path.rfind("/")]
     if out_dir != None:
         env["OUT_DIR"] = "${pwd}/" + out_dir
 
