@@ -84,6 +84,6 @@ bool ReadFileToArray(const System::StrType& file_path,
     }
   }
   return true;
-}  // namespace process_wrapper
+} 
 
 }  // namespace process_wrapper
