@@ -23,6 +23,7 @@
 #include <unistd.h>
 
 #include <cerrno>
+#include <cstring>
 #include <iostream>
 #include <vector>
 
