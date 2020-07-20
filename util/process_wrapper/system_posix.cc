@@ -22,6 +22,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
+#include <cerrno>
 #include <iostream>
 #include <vector>
 
@@ -68,7 +69,7 @@ public:
              S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
     if (output_file_desc == -1) {
       std::cerr << "process wrapper error: failed to open redirection file: "
-                << strerror(errno) << ".\n";
+                << std::strerror(errno) << ".\n";
       return false;
     }
     while (1) {
@@ -76,7 +77,7 @@ public:
       if (read_bytes < 0) {
         std::cerr
             << "process wrapper error: failed to read child process output: "
-            << strerror(errno) << ".\n";
+            << std::strerror(errno) << ".\n";
         return false;
       } else if (read_bytes == 0) {
         break;
@@ -84,7 +85,7 @@ public:
       ssize_t written_bytes = write(output_file_desc, buffer, read_bytes);
       if (written_bytes < 0 || written_bytes != read_bytes) {
         std::cerr << "process wrapper error: failed to write to ouput file: "
-                  << strerror(errno) << ".\n";
+                  << std::strerror(errno) << ".\n";
         return false;
       }
     }
@@ -131,7 +132,7 @@ int System::Exec(const System::StrType &executable,
   pid_t child_pid = fork();
   if (child_pid < 0) {
     std::cerr << "process wrapper error: failed to fork the current process: "
-              << strerror(errno) << ".\n";
+              << std::strerror(errno) << ".\n";
     return -1;
   } else if (child_pid == 0) {
     if (!stdout_file.empty()) {
@@ -157,7 +158,7 @@ int System::Exec(const System::StrType &executable,
 
     execve(executable.c_str(), argv.data(), envp.data());
     std::cerr << "process wrapper error: failed to exec the new process: "
-              << strerror(errno) << ".\n";
+              << std::strerror(errno) << ".\n";
     return -1;
   }
 
