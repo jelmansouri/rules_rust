@@ -1,3 +1,17 @@
+// Copyright 2020 The Bazel Authors. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #include <cstddef>
 
 #include "util/process_wrapper/system.h"
@@ -67,8 +81,20 @@ void MakeEnvironmentBlock(const System::EnvironmentBlock& environment_block,
   environment_block_win.push_back(PW_SYS_STR('\0'));
 }
 
+std::string GetLastErrorAsStr() {
+  LPVOID msg_buffer = nullptr;
+  size_t size = ::FormatMessageA(
+      FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
+          FORMAT_MESSAGE_IGNORE_INSERTS,
+      NULL, ::GetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+      (LPSTR)&msg_buffer, 0, NULL);
+  std::string error((LPSTR)msg_buffer, size);
+  LocalFree(msg_buffer);
+  return error;
+}
+
 class OutputPipe {
- public:
+public:
   static constexpr size_t kReadEndHandle = 0;
   static constexpr size_t kWriteEndHandle = 1;
 
@@ -123,7 +149,8 @@ class OutputPipe {
         /*hTemplateFile*/ NULL);
 
     if (output_file_handle == INVALID_HANDLE_VALUE) {
-      std::cerr << "process wrapper error: failed to open the output file.\n";
+      std::cerr << "process wrapper error: failed to open the output file: "
+                << GetLastErrorAsStr();
       return false;
     }
 
@@ -137,7 +164,8 @@ class OutputPipe {
         break;
       } else if (!success) {
         std::cerr
-            << "process wrapper error: failed to read child process output.\n";
+            << "process wrapper error: failed to read child process output: "
+            << GetLastErrorAsStr();
         return false;
       }
 
@@ -145,14 +173,15 @@ class OutputPipe {
       success = WriteFile(output_file_handle, buffer, read, &written, NULL);
       if (!success) {
         std::cerr << "process wrapper error: failed to write to output capture "
-                     "file.\n";
+                     "file: "
+                  << GetLastErrorAsStr();
         return false;
       }
     }
     return true;
   }
 
- private:
+private:
   void Close(size_t idx) {
     if (output_pipe_handles_[idx] != nullptr) {
       ::CloseHandle(output_pipe_handles_[idx]);
@@ -162,7 +191,7 @@ class OutputPipe {
   HANDLE output_pipe_handles_[2] = {nullptr};
 };
 
-}  // namespace
+} // namespace
 
 System::StrType System::GetWorkingDirectory() {
   constexpr DWORD kMaxBufferLength = 4096;
@@ -184,13 +213,15 @@ int System::Exec(const System::StrType& executable,
   OutputPipe stdout_pipe;
   if (!stdout_file.empty() &&
       !stdout_pipe.CreateEnds(startup_info, /*err*/ false)) {
-    std::cerr << "process wrapper error: failed to create stdout pipe.\n";
+    std::cerr << "process wrapper error: failed to create stdout pipe: "
+              << GetLastErrorAsStr();
     return -1;
   }
   OutputPipe stderr_pipe;
   if (!stderr_file.empty() &&
       !stderr_pipe.CreateEnds(startup_info, /*err*/ true)) {
-    std::cerr << "process wrapper error: failed to create stderr pipe.\n";
+    std::cerr << "process wrapper error: failed to create stderr pipe: "
+              << GetLastErrorAsStr();
     return -1;
   }
 
@@ -212,7 +243,7 @@ int System::Exec(const System::StrType& executable,
       /*dwCreationFlags*/ 0
 #if defined(UNICODE)
           | CREATE_UNICODE_ENVIRONMENT
-#endif  // defined(UNICODE)
+#endif // defined(UNICODE)
       ,
       /*lpEnvironment*/ environment_block_win.empty()
           ? nullptr
@@ -222,7 +253,8 @@ int System::Exec(const System::StrType& executable,
       /*lpProcessInformation*/ &process_info);
 
   if (success == FALSE) {
-    std::cerr << "process wrapper error: Failed to launch a new process.\n";
+    std::cerr << "process wrapper error: failed to launch a new process: "
+              << GetLastErrorAsStr();
     return -1;
   }
 
@@ -245,4 +277,4 @@ int System::Exec(const System::StrType& executable,
   return exit_status;
 }
 
-}  // namespace process_wrapper
+} // namespace process_wrapper

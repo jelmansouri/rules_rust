@@ -1,3 +1,17 @@
+// Copyright 2020 The Bazel Authors. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #include "util/process_wrapper/system.h"
 #include "util/process_wrapper/utils.h"
 
@@ -16,7 +30,7 @@ namespace process_wrapper {
 namespace {
 
 class OutputPipe {
- public:
+public:
   static constexpr size_t kReadEndDesc = 0;
   static constexpr size_t kWriteEndDesc = 1;
 
@@ -44,7 +58,7 @@ class OutputPipe {
   int ReadEndDesc() const { return output_pipe_desc_[kReadEndDesc]; }
   int WriteEndDesc() const { return output_pipe_desc_[kWriteEndDesc]; }
 
-  bool WriteToFile(const System::StrType& stdout_file) {
+  bool WriteToFile(const System::StrType &stdout_file) {
     CloseWriteEnd();
 
     constexpr size_t kBufferSize = 4096;
@@ -53,21 +67,24 @@ class OutputPipe {
         open(stdout_file.c_str(), O_WRONLY | O_CREAT | O_TRUNC,
              S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
     if (output_file_desc == -1) {
-      std::cerr << "process wrapper error: failed to open redirection file.\n";
+      std::cerr << "process wrapper error: failed to open redirection file: "
+                << strerror(errno) << ".\n";
       return false;
     }
     while (1) {
       ssize_t read_bytes = read(ReadEndDesc(), buffer, kBufferSize);
       if (read_bytes < 0) {
         std::cerr
-            << "process wrapper error: failed to read child process ouptput.\n";
+            << "process wrapper error: failed to read child process output: "
+            << strerror(errno) << ".\n";
         return false;
       } else if (read_bytes == 0) {
         break;
       }
       ssize_t written_bytes = write(output_file_desc, buffer, read_bytes);
       if (written_bytes < 0 || written_bytes != read_bytes) {
-        std::cerr << "process wrapper error: failed to write to ouput file.\n";
+        std::cerr << "process wrapper error: failed to write to ouput file: "
+                  << strerror(errno) << ".\n";
         return false;
       }
     }
@@ -77,7 +94,7 @@ class OutputPipe {
     return true;
   }
 
- private:
+private:
   void Close(size_t idx) {
     if (output_pipe_desc_[idx] > 0) {
       close(output_pipe_desc_[idx]);
@@ -87,7 +104,7 @@ class OutputPipe {
   int output_pipe_desc_[2] = {-1};
 };
 
-}  // namespace
+} // namespace
 
 System::StrType System::GetWorkingDirectory() {
   const size_t kMaxBufferLength = 4096;
@@ -98,10 +115,10 @@ System::StrType System::GetWorkingDirectory() {
   return System::StrType{cwd};
 }
 
-int System::Exec(const System::StrType& executable,
-                 const System::Arguments& arguments,
-                 const System::EnvironmentBlock& environment_block,
-                 const StrType& stdout_file, const StrType& stderr_file) {
+int System::Exec(const System::StrType &executable,
+                 const System::Arguments &arguments,
+                 const System::EnvironmentBlock &environment_block,
+                 const StrType &stdout_file, const StrType &stderr_file) {
   OutputPipe stdout_pipe;
   if (!stdout_file.empty() && !stdout_pipe.CreateEnds()) {
     return -1;
@@ -113,7 +130,8 @@ int System::Exec(const System::StrType& executable,
 
   pid_t child_pid = fork();
   if (child_pid < 0) {
-    std::cerr << "process wrapper error: failed to fork the current process.\n";
+    std::cerr << "process wrapper error: failed to fork the current process: "
+              << strerror(errno) << ".\n";
     return -1;
   } else if (child_pid == 0) {
     if (!stdout_file.empty()) {
@@ -122,23 +140,24 @@ int System::Exec(const System::StrType& executable,
     if (!stderr_file.empty()) {
       stderr_pipe.DupWriteEnd(STDERR_FILENO);
     }
-    std::vector<char*> argv;
-    argv.push_back(const_cast<char*>(executable.c_str()));
-    for (const StrType& argument : arguments) {
-      argv.push_back(const_cast<char*>(argument.c_str()));
+    std::vector<char *> argv;
+    argv.push_back(const_cast<char *>(executable.c_str()));
+    for (const StrType &argument : arguments) {
+      argv.push_back(const_cast<char *>(argument.c_str()));
     }
     argv.push_back(nullptr);
 
-    std::vector<char*> envp;
-    for (const StrType& ev : environment_block) {
-      envp.push_back(const_cast<char*>(ev.c_str()));
+    std::vector<char *> envp;
+    for (const StrType &ev : environment_block) {
+      envp.push_back(const_cast<char *>(ev.c_str()));
     }
     envp.push_back(nullptr);
 
     umask(022);
 
     execve(executable.c_str(), argv.data(), envp.data());
-    std::cerr << "process wrapper error: failed to exec the new process.\n";
+    std::cerr << "process wrapper error: failed to exec the new process: "
+              << strerror(errno) << ".\n";
     return -1;
   }
 
@@ -161,4 +180,4 @@ int System::Exec(const System::StrType& executable,
   return exit_status;
 }
 
-}  // namespace process_wrapper
+} // namespace process_wrapper
