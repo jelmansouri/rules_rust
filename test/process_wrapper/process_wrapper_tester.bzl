@@ -14,7 +14,7 @@
 
 """Process wrapper test.
 
-This rule unit tests the different process_wrapper functionality
+This rule unit tests the different process_wrapper functionality.
 """
 
 def _impl(ctx):
